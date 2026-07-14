@@ -1,0 +1,43 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Playfair Display", serif;
+  --font-sans: "Montserrat", sans-serif;
+  --color-brand-gold: #d4af37;
+  --color-brand-pink: #fadadd;
+  --color-brand-dark: #1a1a1a;
+}
+
+/* Custom styles for high-end minimalist presentation */
+@layer base {
+  body {
+    @apply font-sans transition-colors duration-300;
+  }
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Luxury card shadow style */
+.ambient-shadow {
+  box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.03);
+}
+
+.ambient-shadow-lg {
+  box-shadow: 0px 20px 40px rgba(250, 218, 221, 0.25);
+}
+
+.dark .ambient-shadow {
+  box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.dark .ambient-shadow-lg {
+  box-shadow: 0px 20px 40px rgba(0, 0, 0, 0.5);
+}
+

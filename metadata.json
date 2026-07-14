@@ -1,0 +1,6 @@
+{
+  "name": "Geetha MUA",
+  "description": "A luxurious and modern makeup artist application with dark and light theme, customizable service booking, editable portfolio, and image gallery management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
