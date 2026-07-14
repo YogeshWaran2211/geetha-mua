@@ -5,9 +5,8 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
-    // Set base to your GitHub repo name for GitHub Pages hosting
-    // Change '/geetha-mua/' to match your actual GitHub repository name
-    base: process.env.GITHUB_PAGES === 'true' ? '/geetha-mua/' : '/',
+    // Base path for GitHub Pages hosting — matches repo name: geetha-mua
+    base: '/geetha-mua/',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
