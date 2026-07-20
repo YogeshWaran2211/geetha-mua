@@ -251,19 +251,9 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
             Base Currency Symbol
           </span>
           <div className="flex gap-2">
-            {['₹', '$', '£', '€'].map((sym) => (
-              <button
-                key={sym}
-                onClick={() => setCurrencySymbol(sym)}
-                className={`flex-1 py-1.5 rounded text-xs font-bold transition-all duration-200 ${
-                  currencySymbol === sym
-                    ? 'bg-brand-gold text-brand-dark'
-                    : 'bg-gray-50 dark:bg-zinc-800 dark:text-gray-300 hover:bg-gray-100'
-                }`}
-              >
-                {sym}
-              </button>
-            ))}
+            <div className="flex items-center justify-center w-full py-2 rounded bg-brand-gold text-brand-dark text-sm font-bold">
+              ₹ Indian Rupees
+            </div>
           </div>
         </div>
       </section>

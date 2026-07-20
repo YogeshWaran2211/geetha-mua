@@ -65,9 +65,15 @@ export default function App() {
     return saved ? JSON.parse(saved) : [];
   });
 
-  // Currency state
+  // Currency state — always ₹ (Indian Rupees), reset any old saved value
   const [currencySymbol, setCurrencySymbol] = useState<string>(() => {
-    return localStorage.getItem('geetha-mua-currency') || '₹';
+    const saved = localStorage.getItem('geetha-mua-currency');
+    // Force reset to ₹ if old value was $ or other foreign currency
+    if (!saved || saved === '$' || saved === '£' || saved === '€') {
+      localStorage.setItem('geetha-mua-currency', '₹');
+      return '₹';
+    }
+    return saved;
   });
 
   // Selected Service to pre-populate booking flow
