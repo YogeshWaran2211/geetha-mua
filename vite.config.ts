@@ -5,8 +5,8 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
-    // Base path for GitHub Pages hosting — matches repo name: geetha-mua
-    base: '/geetha-mua/',
+    // Base path '/' works for Netlify (root deployment)
+    base: '/',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
