@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Header } from './components/Header';
 import { BottomNav } from './components/BottomNav';
 import { HomeView } from './components/HomeView';
@@ -10,7 +10,8 @@ import { OwnerPasswordModal } from './components/OwnerPasswordModal';
 
 import { INITIAL_SERVICES, INITIAL_GALLERY } from './initialData';
 import { Service, GalleryItem, BookingDetails } from './types';
-import { ShieldAlert, Sparkles } from 'lucide-react';
+import { ShieldAlert, Sparkles, Cloud, CloudOff } from 'lucide-react';
+import { fetchBookingsFromFirestore } from './firebase';
 
 const DEFAULT_OWNER_PASSWORD = 'geetha@0411';
 
@@ -18,10 +19,10 @@ export default function App() {
   // Theme state
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     const saved = localStorage.getItem('geetha-mua-theme');
-    return saved ? saved === 'dark' : true; // Default to eye-safe dark theme
+    return saved ? saved === 'dark' : true;
   });
 
-  // Mode state (Client or Owner mode toggled)
+  // Mode state
   const [isOwnerMode, setIsOwnerMode] = useState<boolean>(false);
 
   // Password gate state
@@ -37,11 +38,7 @@ export default function App() {
   const [services, setServices] = useState<Service[]>(() => {
     const saved = localStorage.getItem('geetha-mua-services');
     if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error(e);
-      }
+      try { return JSON.parse(saved); } catch (e) { console.error(e); }
     }
     return INITIAL_SERVICES;
   });
@@ -50,25 +47,24 @@ export default function App() {
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>(() => {
     const saved = localStorage.getItem('geetha-mua-gallery');
     if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error(e);
-      }
+      try { return JSON.parse(saved); } catch (e) { console.error(e); }
     }
     return INITIAL_GALLERY;
   });
 
-  // Client Bookings state with persistence
+  // Client Bookings — load from localStorage first, then merge with Firestore
   const [bookings, setBookings] = useState<BookingDetails[]>(() => {
     const saved = localStorage.getItem('geetha-mua-bookings');
     return saved ? JSON.parse(saved) : [];
   });
 
-  // Currency state — always ₹ (Indian Rupees), reset any old saved value
+  // Cloud sync state
+  const [cloudSynced, setCloudSynced] = useState<boolean>(false);
+  const [cloudError, setCloudError] = useState<boolean>(false);
+
+  // Currency state — always ₹
   const [currencySymbol, setCurrencySymbol] = useState<string>(() => {
     const saved = localStorage.getItem('geetha-mua-currency');
-    // Force reset to ₹ if old value was $ or other foreign currency
     if (!saved || saved === '$' || saved === '£' || saved === '€') {
       localStorage.setItem('geetha-mua-currency', '₹');
       return '₹';
@@ -81,6 +77,29 @@ export default function App() {
 
   // Success Notification banner helper
   const [notification, setNotification] = useState<string | null>(null);
+
+  // ── Fetch bookings from Firestore when Owner Mode is entered ────────────────
+  const syncFromFirestore = useCallback(async () => {
+    try {
+      const cloudBookings = await fetchBookingsFromFirestore();
+      if (cloudBookings.length > 0) {
+        // Merge cloud bookings with local — deduplicate by booking ID
+        setBookings(prev => {
+          const localIds = new Set(prev.map(b => b.id));
+          const newOnes = cloudBookings.filter(b => !localIds.has(b.id));
+          const merged = [...newOnes, ...prev];
+          localStorage.setItem('geetha-mua-bookings', JSON.stringify(merged));
+          return merged;
+        });
+      }
+      setCloudSynced(true);
+      setCloudError(false);
+    } catch (err) {
+      console.error('Firestore sync failed:', err);
+      setCloudError(true);
+      setCloudSynced(false);
+    }
+  }, []);
 
   // Sync theme with HTML tag
   useEffect(() => {
@@ -95,105 +114,85 @@ export default function App() {
   }, [isDarkMode]);
 
   // Sync state data into LocalStorage
-  useEffect(() => {
-    localStorage.setItem('geetha-mua-services', JSON.stringify(services));
-  }, [services]);
+  useEffect(() => { localStorage.setItem('geetha-mua-services', JSON.stringify(services)); }, [services]);
+  useEffect(() => { localStorage.setItem('geetha-mua-gallery', JSON.stringify(galleryItems)); }, [galleryItems]);
+  useEffect(() => { localStorage.setItem('geetha-mua-bookings', JSON.stringify(bookings)); }, [bookings]);
+  useEffect(() => { localStorage.setItem('geetha-mua-currency', currencySymbol); }, [currencySymbol]);
+  useEffect(() => { localStorage.setItem('geetha-mua-owner-pwd', ownerPassword); }, [ownerPassword]);
 
+  // Fetch from Firestore whenever owner dashboard is opened
   useEffect(() => {
-    localStorage.setItem('geetha-mua-gallery', JSON.stringify(galleryItems));
-  }, [galleryItems]);
-
-  useEffect(() => {
-    localStorage.setItem('geetha-mua-bookings', JSON.stringify(bookings));
-  }, [bookings]);
-
-  useEffect(() => {
-    localStorage.setItem('geetha-mua-currency', currencySymbol);
-  }, [currencySymbol]);
-
-  useEffect(() => {
-    localStorage.setItem('geetha-mua-owner-pwd', ownerPassword);
-  }, [ownerPassword]);
+    if (isOwnerMode && activeTab === 'owner') {
+      syncFromFirestore();
+    }
+  }, [isOwnerMode, activeTab, syncFromFirestore]);
 
   // Utility to display brief auto-dismiss notifications
   const triggerNotification = (msg: string) => {
     setNotification(msg);
-    setTimeout(() => setNotification(null), 3000);
+    setTimeout(() => setNotification(null), 3500);
   };
 
-  // Owner Mode password gate — open modal instead of directly toggling
+  // Owner Mode password gate
   const handleRequestOwnerMode = () => {
     if (isOwnerMode) {
-      // Already in owner mode → just exit
       setIsOwnerMode(false);
       setActiveTab('home');
+      setCloudSynced(false);
       triggerNotification('👁️ Returning to Client View.');
     } else {
       setShowPasswordModal(true);
     }
   };
 
-  // Called when password modal succeeds
   const handlePasswordSuccess = () => {
     setShowPasswordModal(false);
     setIsOwnerMode(true);
     setActiveTab('owner');
-    triggerNotification('🔨 Admin Suite opened. Edit catalog, gallery and reservations.');
+    triggerNotification('🔨 Admin Suite opened. Syncing bookings from cloud...');
   };
 
-  // Mapped functions to connect UI events to persistence Layer
+  // Booking handlers
   const handleBookNow = (service?: Service) => {
-    if (service) {
-      setPreSelectedService(service);
-    } else {
-      setPreSelectedService(null);
-    }
+    setPreSelectedService(service || null);
     setActiveTab('book');
   };
 
   const handleBookingSubmit = (newBooking: BookingDetails) => {
-    setBookings([newBooking, ...bookings]);
-    triggerNotification('✨ Appointment reservation recorded successfully!');
+    setBookings(prev => [newBooking, ...prev]);
+    triggerNotification('✨ Appointment reserved & saved to cloud!');
   };
 
   const handleAddService = (newService: Omit<Service, 'id'>) => {
-    const service: Service = {
-      ...newService,
-      id: `s-${Date.now()}`,
-    };
-    setServices([...services, service]);
-    triggerNotification('🚀 New service added successfully to the catalog!');
+    const service: Service = { ...newService, id: `s-${Date.now()}` };
+    setServices(prev => [...prev, service]);
+    triggerNotification('🚀 New service added to catalog!');
   };
 
   const handleDeleteService = (id: string) => {
-    setServices(services.filter((s) => s.id !== id));
-    triggerNotification('🗑️ Service successfully removed from catalog.');
+    setServices(prev => prev.filter(s => s.id !== id));
+    triggerNotification('🗑️ Service removed from catalog.');
   };
 
   const handleUpdateService = (id: string, updates: Partial<Service>) => {
-    setServices(
-      services.map((s) => (s.id === id ? { ...s, ...updates } : s))
-    );
-    triggerNotification('💼 Service details updated successfully!');
+    setServices(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
+    triggerNotification('💼 Service updated successfully!');
   };
 
   const handleAddGalleryItem = (newItem: Omit<GalleryItem, 'id'>) => {
-    const item: GalleryItem = {
-      ...newItem,
-      id: `g-${Date.now()}`,
-    };
-    setGalleryItems([item, ...galleryItems]);
-    triggerNotification('📸 New transformation photo appended to gallery!');
+    const item: GalleryItem = { ...newItem, id: `g-${Date.now()}` };
+    setGalleryItems(prev => [item, ...prev]);
+    triggerNotification('📸 New photo added to gallery!');
   };
 
   const handleDeleteGalleryItem = (id: string) => {
-    setGalleryItems(galleryItems.filter((item) => item.id !== id));
-    triggerNotification('🗑️ Gallery photo successfully removed.');
+    setGalleryItems(prev => prev.filter(item => item.id !== id));
+    triggerNotification('🗑️ Gallery photo removed.');
   };
 
   return (
     <div className="min-h-screen bg-[#faf8f5] dark:bg-[#121212] text-zinc-900 dark:text-gray-100 transition-colors duration-300 font-sans">
-      
+
       {/* Secure Owner Password Modal */}
       <OwnerPasswordModal
         isOpen={showPasswordModal}
@@ -210,7 +209,25 @@ export default function App() {
         </div>
       )}
 
-      {/* Header bar: Logo, Dark mode button, Owner View switch */}
+      {/* Cloud sync status indicator */}
+      {isOwnerMode && (
+        <div className={`fixed bottom-24 right-4 z-40 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-md transition-all duration-300 ${
+          cloudSynced
+            ? 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
+            : cloudError
+            ? 'bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900'
+            : 'bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400 border border-gray-200 dark:border-zinc-700'
+        }`}>
+          {cloudSynced
+            ? <><Cloud size={11} /> Cloud Synced</>
+            : cloudError
+            ? <><CloudOff size={11} /> Offline Mode</>
+            : <><Cloud size={11} /> Syncing...</>
+          }
+        </div>
+      )}
+
+      {/* Header bar */}
       <Header
         isDarkMode={isDarkMode}
         setIsDarkMode={setIsDarkMode}
@@ -227,54 +244,39 @@ export default function App() {
 
       {/* Primary Display Content Grid */}
       <main className="max-w-[1440px] mx-auto px-6 pt-6 pb-28 md:pb-20">
-        
-        {/* Quick reminder banner when in Owner Mode */}
+
+        {/* Owner mode reminder banner */}
         {isOwnerMode && activeTab !== 'owner' && (
           <div className="bg-amber-500/10 dark:bg-amber-500/5 border border-brand-gold/30 p-3 rounded-lg text-xs font-medium text-amber-800 dark:text-amber-400 mb-8 flex justify-between items-center gap-2">
             <div className="flex items-center gap-2">
               <ShieldAlert size={14} />
-              <span>You are viewing as Owner. Gallery deletes and inline price edits are unlocked.</span>
+              <span>Owner Mode active — edits are unlocked.</span>
             </div>
             <button
               onClick={() => setActiveTab('owner')}
               className="underline text-[10px] font-bold uppercase tracking-wider text-amber-900 dark:text-amber-300"
             >
-              Configure Service List
+              Go to Dashboard
             </button>
           </div>
         )}
 
-        {/* Dynamic Route Rendering with elegant state switching */}
         <div>
           {activeTab === 'home' && (
-            <HomeView
-              services={services}
-              onBookNow={handleBookNow}
-              currencySymbol={currencySymbol}
-            />
+            <HomeView services={services} onBookNow={handleBookNow} currencySymbol={currencySymbol} />
           )}
-
           {activeTab === 'services' && (
-            <ServicesView
-              services={services}
-              onBookNow={handleBookNow}
-              currencySymbol={currencySymbol}
-            />
+            <ServicesView services={services} onBookNow={handleBookNow} currencySymbol={currencySymbol} />
           )}
-
           {activeTab === 'book' && (
             <BookingView
               services={services}
               preSelectedService={preSelectedService}
               currencySymbol={currencySymbol}
               onBookingSubmit={handleBookingSubmit}
-              onBackToHome={() => {
-                setPreSelectedService(null);
-                setActiveTab('gallery');
-              }}
+              onBackToHome={() => { setPreSelectedService(null); setActiveTab('gallery'); }}
             />
           )}
-
           {activeTab === 'gallery' && (
             <GalleryView
               galleryItems={galleryItems}
@@ -283,7 +285,6 @@ export default function App() {
               onDeleteGalleryItem={handleDeleteGalleryItem}
             />
           )}
-
           {activeTab === 'owner' && isOwnerMode && (
             <OwnerDashboard
               services={services}
@@ -295,12 +296,13 @@ export default function App() {
               onUpdateService={handleUpdateService}
               ownerPassword={ownerPassword}
               setOwnerPassword={setOwnerPassword}
+              cloudSynced={cloudSynced}
+              onRefreshCloud={syncFromFirestore}
             />
           )}
         </div>
 
       </main>
-
     </div>
   );
 }

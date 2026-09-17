@@ -3,7 +3,7 @@ import { Service, BookingDetails } from '../types';
 import {
   Plus, Trash2, Calendar, Edit3, Briefcase, FileText,
   Sparkles, TrendingUp, Users, Download, Key, Save,
-  ChevronDown, ChevronUp, Image, CheckCircle2, X
+  ChevronDown, ChevronUp, Image, CheckCircle2, X, Cloud, RefreshCw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -17,6 +17,8 @@ interface OwnerDashboardProps {
   onUpdateService: (id: string, updates: Partial<Service>) => void;
   ownerPassword: string;
   setOwnerPassword: (pwd: string) => void;
+  cloudSynced: boolean;
+  onRefreshCloud: () => Promise<void>;
 }
 
 // ─── CSV Export Helper ───────────────────────────────────────────────────────
@@ -94,9 +96,18 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
   onUpdateService,
   ownerPassword,
   setOwnerPassword,
+  cloudSynced,
+  onRefreshCloud,
 }) => {
   // Active section tab
   const [activeSection, setActiveSection] = useState<'services' | 'bookings' | 'settings'>('services');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefreshCloud = async () => {
+    setIsRefreshing(true);
+    await onRefreshCloud();
+    setIsRefreshing(false);
+  };
 
   // Service creation form states
   const [showAddForm, setShowAddForm] = useState(false);
@@ -484,9 +495,28 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
           >
             {/* Bookings Header + CSV Export */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-100 dark:border-zinc-800 pb-4">
-              <h2 className="font-serif text-lg md:text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <FileText size={18} className="text-brand-gold" /> Client Bookings ({bookings.length})
-              </h2>
+              <div>
+                <h2 className="font-serif text-lg md:text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <FileText size={18} className="text-brand-gold" /> Client Bookings ({bookings.length})
+                </h2>
+                <div className="flex items-center gap-2 mt-1">
+                  {cloudSynced ? (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                      <Cloud size={10} /> Synced from Firestore
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-gray-400">Local data only</span>
+                  )}
+                  <button
+                    onClick={handleRefreshCloud}
+                    disabled={isRefreshing}
+                    className="inline-flex items-center gap-1 text-[10px] font-bold text-brand-gold hover:text-amber-500 disabled:text-gray-400 transition-colors"
+                  >
+                    <RefreshCw size={10} className={isRefreshing ? 'animate-spin' : ''} />
+                    {isRefreshing ? 'Syncing...' : 'Refresh'}
+                  </button>
+                </div>
+              </div>
               <button
                 onClick={handleCSVDownload}
                 disabled={bookings.length === 0}

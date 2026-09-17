@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Service, BookingDetails } from '../types';
-import { Calendar, Clock, User, Phone, Mail, FileText, ArrowRight, ArrowLeft, Check, Camera, Sparkles, Printer, CheckCircle2 } from 'lucide-react';
+import { Calendar, Clock, User, Phone, Mail, FileText, ArrowRight, ArrowLeft, Check, Camera, Sparkles, Printer, CheckCircle2, Loader2, CloudOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { saveBookingToFirestore } from '../firebase';
+import { sendBookingEmail } from '../emailService';
 
 interface BookingViewProps {
   services: Service[];
@@ -20,6 +22,9 @@ export const BookingView: React.FC<BookingViewProps> = ({
 }) => {
   const [step, setStep] = useState(1);
   const [isRecalculating, setIsRecalculating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [cloudSaved, setCloudSaved] = useState(false);
 
   // Client personal details
   const [firstName, setFirstName] = useState('');
@@ -76,7 +81,7 @@ export const BookingView: React.FC<BookingViewProps> = ({
     setTimeout(() => setIsRecalculating(false), 250);
   };
 
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
     if (step < 3) {
       setStep(step + 1);
     } else {
@@ -116,6 +121,22 @@ export const BookingView: React.FC<BookingViewProps> = ({
         date: eventDate,
         time: eventTime,
       };
+
+      // ── Save to Firestore + send email ─────────────────────────
+      setIsSaving(true);
+      setSaveError(null);
+      try {
+        await saveBookingToFirestore(bookingData);
+        setCloudSaved(true);
+        // Send notification email to owner (non-blocking)
+        sendBookingEmail(bookingData).catch(console.error);
+      } catch (err) {
+        console.error('Firestore save failed:', err);
+        setSaveError('Could not save to cloud. Your booking is saved locally.');
+        setCloudSaved(false);
+      } finally {
+        setIsSaving(false);
+      }
 
       onBookingSubmit(bookingData);
       setStep(4); // Advance to receipt
@@ -546,9 +567,14 @@ export const BookingView: React.FC<BookingViewProps> = ({
 
               <button
                 onClick={handleNextStep}
-                className="inline-flex items-center gap-2 bg-brand-gold hover:bg-amber-500 text-brand-dark py-3.5 px-8 rounded font-semibold text-xs uppercase tracking-widest transition-all duration-200 shadow-md shadow-brand-gold/10"
+                disabled={isSaving}
+                className="inline-flex items-center gap-2 bg-brand-gold hover:bg-amber-500 disabled:bg-amber-300 text-brand-dark py-3.5 px-8 rounded font-semibold text-xs uppercase tracking-widest transition-all duration-200 shadow-md shadow-brand-gold/10 disabled:cursor-wait"
               >
-                <span>Confirm & Reserve</span> <Check size={14} />
+                {isSaving ? (
+                  <><Loader2 size={14} className="animate-spin" /><span>Saving...</span></>
+                ) : (
+                  <><span>Confirm &amp; Reserve</span><Check size={14} /></>
+                )}
               </button>
             </div>
           </motion.div>
@@ -572,6 +598,16 @@ export const BookingView: React.FC<BookingViewProps> = ({
               <p className="text-gray-500 dark:text-zinc-400 text-sm max-w-md mx-auto">
                 Thank you, <span className="font-bold text-gray-800 dark:text-gray-100">{firstName}</span>! Geetha MUA has received your request and will contact you shortly.
               </p>
+              {/* Cloud save status */}
+              {cloudSaved ? (
+                <div className="inline-flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold px-3 py-1.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                  ☁️ Saved to cloud database
+                </div>
+              ) : saveError ? (
+                <div className="inline-flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 text-[11px] font-bold px-3 py-1.5 rounded-full border border-amber-200 dark:border-amber-800">
+                  <CloudOff size={11} /> {saveError}
+                </div>
+              ) : null}
             </div>
 
             {/* Print-ready Invoice Card */}
