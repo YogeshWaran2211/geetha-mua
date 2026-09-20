@@ -1,20 +1,23 @@
 import React, { useState } from 'react';
-import { Service, BookingDetails } from '../types';
+import { Service, BookingDetails, Offer } from '../types';
 import {
   Plus, Trash2, Calendar, Edit3, Briefcase, FileText,
   Sparkles, TrendingUp, Users, Download, Key, Save,
-  ChevronDown, ChevronUp, Image, CheckCircle2, X, Cloud, RefreshCw
+  ChevronDown, ChevronUp, Image, CheckCircle2, X, Cloud, RefreshCw, Tag, Bell
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface OwnerDashboardProps {
   services: Service[];
   bookings: BookingDetails[];
+  offers: Offer[];
   currencySymbol: string;
   setCurrencySymbol: (symbol: string) => void;
   onAddService: (service: Omit<Service, 'id'>) => void;
   onDeleteService: (id: string) => void;
   onUpdateService: (id: string, updates: Partial<Service>) => void;
+  onAddOffer: (offer: Omit<Offer, 'id' | 'createdAt'>) => Promise<void>;
+  onDeleteOffer: (id: string) => Promise<void>;
   ownerPassword: string;
   setOwnerPassword: (pwd: string) => void;
   cloudSynced: boolean;
@@ -89,18 +92,20 @@ function exportBookingsToCSV(bookings: BookingDetails[], currencySymbol: string)
 export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
   services,
   bookings,
+  offers,
   currencySymbol,
   setCurrencySymbol,
   onAddService,
   onDeleteService,
   onUpdateService,
+  onAddOffer,
+  onDeleteOffer,
   ownerPassword,
   setOwnerPassword,
   cloudSynced,
   onRefreshCloud,
 }) => {
-  // Active section tab
-  const [activeSection, setActiveSection] = useState<'services' | 'bookings' | 'settings'>('services');
+  const [activeSection, setActiveSection] = useState<'services' | 'bookings' | 'offers' | 'settings'>('services');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const handleRefreshCloud = async () => {
@@ -109,7 +114,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
     setIsRefreshing(false);
   };
 
-  // Service creation form states
+  // Service form states
   const [showAddForm, setShowAddForm] = useState(false);
   const [name, setName] = useState('');
   const [category, setCategory] = useState('Bridal');
@@ -119,9 +124,15 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
   const [duration, setDuration] = useState<number>(2);
   const [image, setImage] = useState('');
 
-  // Full-edit state for an existing service
+  // Full-edit state for existing service
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
   const [editFields, setEditFields] = useState<Partial<Service>>({});
+
+  // Offer form states
+  const [offerTitle, setOfferTitle] = useState('');
+  const [offerDesc, setOfferDesc] = useState('');
+  const [offerValidUntil, setOfferValidUntil] = useState('');
+  const [offerSaving, setOfferSaving] = useState(false);
 
   // Password change state
   const [currentPwd, setCurrentPwd] = useState('');
@@ -129,12 +140,10 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
   const [confirmPwd, setConfirmPwd] = useState('');
   const [pwdMessage, setPwdMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  // CSV download feedback
   const [csvDownloaded, setCsvDownloaded] = useState(false);
 
   const totalBookingsAmt = bookings.reduce((sum, b) => sum + b.amount, 0);
 
-  // ── Add Service ─────────────────────────────────────────────────────────────
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !description) return;
@@ -150,7 +159,6 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
     setShowAddForm(false);
   };
 
-  // ── Start full-edit for a service ────────────────────────────────────────────
   const handleStartEdit = (service: Service) => {
     setEditingServiceId(service.id);
     setEditFields({ ...service });
@@ -167,7 +175,6 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
     setEditFields({});
   };
 
-  // ── Password Change ──────────────────────────────────────────────────────────
   const handlePasswordChange = (e: React.FormEvent) => {
     e.preventDefault();
     if (currentPwd !== ownerPassword) {
@@ -184,19 +191,28 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
     }
     setOwnerPassword(newPwd);
     setCurrentPwd(''); setNewPwd(''); setConfirmPwd('');
-    setPwdMessage({ type: 'success', text: '✅ Password changed successfully! Use it next time you log in.' });
+    setPwdMessage({ type: 'success', text: '✅ Password changed successfully!' });
   };
 
-  // ── CSV Export ───────────────────────────────────────────────────────────────
   const handleCSVDownload = () => {
     exportBookingsToCSV(bookings, currencySymbol);
     setCsvDownloaded(true);
     setTimeout(() => setCsvDownloaded(false), 2500);
   };
 
+  const handleAddOfferSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!offerTitle || !offerDesc) return;
+    setOfferSaving(true);
+    await onAddOffer({ title: offerTitle, description: offerDesc, validUntil: offerValidUntil || undefined });
+    setOfferTitle(''); setOfferDesc(''); setOfferValidUntil('');
+    setOfferSaving(false);
+  };
+
   const sectionTabs = [
     { id: 'services', label: 'Services & Pricing', icon: <Briefcase size={14} /> },
     { id: 'bookings', label: `Bookings (${bookings.length})`, icon: <FileText size={14} /> },
+    { id: 'offers',   label: `Offers (${offers.length})`,   icon: <Tag size={14} /> },
     { id: 'settings', label: 'Settings', icon: <Key size={14} /> },
   ] as const;
 
@@ -606,6 +622,120 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
                 ))}
               </div>
             )}
+          </motion.section>
+        )}
+
+        {/* ── OFFERS TAB ───────────────────────────────────────────────────── */}
+        {activeSection === 'offers' && (
+          <motion.section
+            key="offers"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="bg-white dark:bg-zinc-900 p-6 md:p-8 rounded-xl border border-gray-100 dark:border-zinc-800 ambient-shadow space-y-6"
+          >
+            {/* Header */}
+            <div className="flex items-center gap-2 border-b border-gray-100 dark:border-zinc-800 pb-4">
+              <Bell size={18} className="text-brand-gold" />
+              <div>
+                <h2 className="font-serif text-lg font-bold text-gray-900 dark:text-white">
+                  Offers & Announcements
+                </h2>
+                <p className="text-[11px] text-gray-400 mt-0.5">
+                  Offers you add here appear in the 🔔 bell icon for all clients instantly.
+                </p>
+              </div>
+            </div>
+
+            {/* Add Offer Form */}
+            <form onSubmit={handleAddOfferSubmit} className="bg-gray-50 dark:bg-zinc-950/50 p-5 rounded-xl border border-gray-100 dark:border-zinc-800 space-y-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400 flex items-center gap-1.5">
+                <Plus size={12} /> Add New Offer
+              </h3>
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Offer Title *</label>
+                <input
+                  type="text"
+                  required
+                  value={offerTitle}
+                  onChange={e => setOfferTitle(e.target.value)}
+                  placeholder="e.g. 20% Off Reception Makeup!"
+                  className="w-full text-sm p-3 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Offer Description *</label>
+                <textarea
+                  required
+                  rows={2}
+                  value={offerDesc}
+                  onChange={e => setOfferDesc(e.target.value)}
+                  placeholder="e.g. Book any reception package and get 20% discount. Offer valid for select dates."
+                  className="w-full text-sm p-3 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold transition-all resize-none"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Valid Until (optional)</label>
+                <input
+                  type="date"
+                  value={offerValidUntil}
+                  onChange={e => setOfferValidUntil(e.target.value)}
+                  className="w-full text-sm p-3 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold transition-all"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={offerSaving}
+                className="w-full bg-brand-gold hover:bg-amber-500 disabled:bg-amber-200 text-brand-dark font-bold text-xs uppercase tracking-widest py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
+              >
+                {offerSaving ? (
+                  <><Sparkles size={14} className="animate-spin" /> Publishing...</>
+                ) : (
+                  <><Tag size={14} /> Publish Offer to Clients</>
+                )}
+              </button>
+            </form>
+
+            {/* Active Offers List */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                Active Offers ({offers.length})
+              </h3>
+              {offers.length === 0 ? (
+                <div className="text-center py-10 text-gray-400">
+                  <Tag size={28} className="mx-auto mb-2 text-gray-300 dark:text-zinc-700" />
+                  <p className="text-sm font-medium">No active offers yet.</p>
+                  <p className="text-[10px] mt-1">Add an offer above — clients will see it immediately!</p>
+                </div>
+              ) : (
+                offers.map(offer => (
+                  <div key={offer.id} className="p-4 rounded-xl bg-amber-50/50 dark:bg-amber-950/10 border border-amber-100 dark:border-amber-900/30 flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3 flex-1">
+                      <Tag size={16} className="text-brand-gold mt-0.5 shrink-0" />
+                      <div>
+                        <p className="text-sm font-bold text-gray-900 dark:text-white">{offer.title}</p>
+                        <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">{offer.description}</p>
+                        {offer.validUntil && (
+                          <p className="text-[10px] text-brand-gold font-semibold mt-1">
+                            Valid until {new Date(offer.validUntil).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                          </p>
+                        )}
+                        <p className="text-[10px] text-gray-300 dark:text-zinc-600 mt-1">
+                          Added {new Date(offer.createdAt).toLocaleDateString('en-IN')}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => onDeleteOffer(offer.id)}
+                      className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-gray-400 hover:text-red-500 transition-colors shrink-0"
+                      title="Remove offer"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
           </motion.section>
         )}
 

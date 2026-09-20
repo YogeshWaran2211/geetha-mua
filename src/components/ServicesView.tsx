@@ -111,10 +111,15 @@ export const ServicesView: React.FC<ServicesViewProps> = ({
                       alt={service.name}
                       referrerPolicy="no-referrer"
                     />
-                    <div className="absolute top-4 left-4">
+                    <div className="absolute top-4 left-4 flex flex-col gap-2">
                       <span className="px-3 py-1 rounded-full bg-white/95 dark:bg-zinc-900/95 text-brand-dark dark:text-white text-[10px] uppercase font-bold tracking-wider shadow-sm border border-gray-100 dark:border-zinc-800">
                         {service.category}
                       </span>
+                      {service.createdAt && Date.now() - new Date(service.createdAt).getTime() < 7 * 24 * 60 * 60 * 1000 && (
+                        <span className="px-3 py-1 rounded-full bg-emerald-500 text-white text-[10px] uppercase font-extrabold tracking-wider shadow-md new-badge flex items-center gap-1">
+                          ✨ NEW
+                        </span>
+                      )}
                     </div>
                   </div>
 

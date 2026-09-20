@@ -14,6 +14,17 @@
   body {
     @apply font-sans transition-colors duration-300;
   }
+
+  /* ── Warm Dark Theme (not pure black) ───────────────────────────────────── */
+  .dark body {
+    background-color: #1a1625;
+    color: #e8e0f0;
+  }
+
+  /* Warm dark backgrounds for cards and surfaces */
+  .dark .bg-\[\#121212\] {
+    background-color: #1a1625 !important;
+  }
 }
 
 .hide-scrollbar::-webkit-scrollbar {
@@ -34,10 +45,27 @@
 }
 
 .dark .ambient-shadow {
-  box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.4);
+  box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.35);
 }
 
 .dark .ambient-shadow-lg {
-  box-shadow: 0px 20px 40px rgba(0, 0, 0, 0.5);
+  box-shadow: 0px 20px 40px rgba(212, 175, 55, 0.08);
 }
 
+/* NEW badge pulse animation */
+@keyframes new-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+.new-badge {
+  animation: new-pulse 2s ease-in-out infinite;
+}
+
+/* Bell notification dropdown animation */
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.bell-dropdown {
+  animation: slide-down 0.2s ease-out;
+}

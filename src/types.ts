@@ -1,18 +1,27 @@
 export interface Service {
   id: string;
   name: string;
-  category: string; // 'Bridal' | 'Reception' | 'Baby Shower' | 'Party' | 'Fashion' | 'Hair & Saree' | etc.
+  category: string;
   description: string;
   fromPrice: number;
   duration: number; // in hours
   image: string;
+  createdAt?: string; // ISO timestamp — used to show "NEW" badge within 7 days
 }
 
 export interface GalleryItem {
   id: string;
   image: string;
-  category: string; // 'Bridal' | 'Celebrity' | 'Shoots' | 'Editorial'
+  category: string;
   title: string;
+}
+
+export interface Offer {
+  id: string;
+  title: string;
+  description: string;
+  validUntil?: string; // Optional date string "YYYY-MM-DD"
+  createdAt: string;   // ISO timestamp
 }
 
 export interface BookingDetails {

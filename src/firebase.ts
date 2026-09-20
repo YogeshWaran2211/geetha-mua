@@ -4,12 +4,15 @@ import {
   getFirestore,
   collection,
   addDoc,
+  setDoc,
   getDocs,
+  deleteDoc,
+  doc,
   orderBy,
   query,
   Timestamp,
 } from 'firebase/firestore';
-import { BookingDetails } from './types';
+import { BookingDetails, Service, Offer } from './types';
 
 const firebaseConfig = {
   apiKey: "AIzaSyAt9RWi2MHTa7tFKmARiDfDI3H85tlhTfY",
@@ -21,19 +24,21 @@ const firebaseConfig = {
   measurementId: "G-EB2875T78G"
 };
 
-// Initialize Firebase app
 const app = initializeApp(firebaseConfig);
-
-// Initialize Firestore
 export const db = getFirestore(app);
 
-// Collection reference
-const BOOKINGS_COLLECTION = 'bookings';
+// ─── Collection names ────────────────────────────────────────────────────────
+const BOOKINGS_COL = 'bookings';
+const SERVICES_COL = 'services';
+const OFFERS_COL   = 'offers';
 
-// ── Save a new booking to Firestore ─────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════════════════
+// BOOKINGS
+// ════════════════════════════════════════════════════════════════════════════
+
 export async function saveBookingToFirestore(booking: BookingDetails): Promise<string> {
   try {
-    const docRef = await addDoc(collection(db, BOOKINGS_COLLECTION), {
+    const docRef = await addDoc(collection(db, BOOKINGS_COL), {
       ...booking,
       createdAt: Timestamp.now(),
     });
@@ -45,20 +50,14 @@ export async function saveBookingToFirestore(booking: BookingDetails): Promise<s
   }
 }
 
-// ── Fetch all bookings from Firestore (for Owner Dashboard) ─────────────────
 export async function fetchBookingsFromFirestore(): Promise<BookingDetails[]> {
   try {
-    const q = query(
-      collection(db, BOOKINGS_COLLECTION),
-      orderBy('createdAt', 'desc')
-    );
-    const querySnapshot = await getDocs(q);
-    const bookings: BookingDetails[] = [];
-
-    querySnapshot.forEach((doc) => {
-      const data = doc.data();
-      bookings.push({
-        id: data.id || doc.id,
+    const q = query(collection(db, BOOKINGS_COL), orderBy('createdAt', 'desc'));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(d => {
+      const data = d.data();
+      return {
+        id: data.id || d.id,
         bookedAt: data.bookedAt || data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
         packageName: data.packageName || data.eventType || '',
         firstName: data.firstName || '',
@@ -73,12 +72,103 @@ export async function fetchBookingsFromFirestore(): Promise<BookingDetails[]> {
         earlyMorningCharges: data.earlyMorningCharges || 0,
         date: data.date || '',
         time: data.time || '',
-      });
+      } as BookingDetails;
     });
-
-    return bookings;
   } catch (error) {
     console.error('Error fetching bookings from Firestore:', error);
     return [];
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// SERVICES  (owner edits → stored in Firestore → all clients see instantly)
+// ════════════════════════════════════════════════════════════════════════════
+
+export async function saveServiceToFirestore(service: Service): Promise<void> {
+  try {
+    // Use service.id as Firestore document ID for easy upsert
+    await setDoc(doc(db, SERVICES_COL, service.id), {
+      ...service,
+      updatedAt: Timestamp.now(),
+    });
+  } catch (error) {
+    console.error('Error saving service to Firestore:', error);
+    throw error;
+  }
+}
+
+export async function deleteServiceFromFirestore(serviceId: string): Promise<void> {
+  try {
+    await deleteDoc(doc(db, SERVICES_COL, serviceId));
+  } catch (error) {
+    console.error('Error deleting service from Firestore:', error);
+  }
+}
+
+export async function fetchServicesFromFirestore(): Promise<Service[]> {
+  try {
+    const snapshot = await getDocs(collection(db, SERVICES_COL));
+    if (snapshot.empty) return [];
+    return snapshot.docs.map(d => {
+      const data = d.data();
+      return {
+        id: d.id,
+        name: data.name || '',
+        category: data.category || '',
+        description: data.description || '',
+        fromPrice: data.fromPrice || 0,
+        duration: data.duration || 1,
+        image: data.image || '',
+        createdAt: data.createdAt || undefined,
+      } as Service;
+    });
+  } catch (error) {
+    console.error('Error fetching services from Firestore:', error);
+    return [];
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// OFFERS  (owner creates → stored in Firestore → clients see via bell icon)
+// ════════════════════════════════════════════════════════════════════════════
+
+export async function saveOfferToFirestore(offer: Offer): Promise<string> {
+  try {
+    const docRef = await addDoc(collection(db, OFFERS_COL), {
+      ...offer,
+      savedAt: Timestamp.now(),
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error('Error saving offer to Firestore:', error);
+    throw error;
+  }
+}
+
+export async function fetchOffersFromFirestore(): Promise<Offer[]> {
+  try {
+    const q = query(collection(db, OFFERS_COL), orderBy('savedAt', 'desc'));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(d => {
+      const data = d.data();
+      return {
+        id: d.id,
+        title: data.title || '',
+        description: data.description || '',
+        validUntil: data.validUntil || undefined,
+        createdAt: data.createdAt || data.savedAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+      } as Offer;
+    });
+  } catch (error) {
+    console.error('Error fetching offers from Firestore:', error);
+    return [];
+  }
+}
+
+export async function deleteOfferFromFirestore(offerId: string): Promise<void> {
+  try {
+    await deleteDoc(doc(db, OFFERS_COL, offerId));
+  } catch (error) {
+    console.error('Error deleting offer from Firestore:', error);
   }
 }
