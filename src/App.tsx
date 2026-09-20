@@ -78,20 +78,22 @@ export default function App() {
   // Success Notification banner helper
   const [notification, setNotification] = useState<string | null>(null);
 
-  // ── Fetch bookings from Firestore when Owner Mode is entered ────────────────
+  // ── Fetch ALL bookings from Firestore when Owner logs in ────────────────────
   const syncFromFirestore = useCallback(async () => {
     try {
       const cloudBookings = await fetchBookingsFromFirestore();
-      if (cloudBookings.length > 0) {
-        // Merge cloud bookings with local — deduplicate by booking ID
-        setBookings(prev => {
-          const localIds = new Set(prev.map(b => b.id));
-          const newOnes = cloudBookings.filter(b => !localIds.has(b.id));
-          const merged = [...newOnes, ...prev];
-          localStorage.setItem('geetha-mua-bookings', JSON.stringify(merged));
-          return merged;
-        });
-      }
+
+      // Firestore is the authoritative source — set bookings from cloud
+      // Also merge any local-only bookings that may not have uploaded yet
+      setBookings(prev => {
+        const cloudIds = new Set(cloudBookings.map(b => b.id));
+        const localOnlyBookings = prev.filter(b => !cloudIds.has(b.id));
+        // Cloud bookings first (newest first from Firestore), then any local-only ones
+        const merged = [...cloudBookings, ...localOnlyBookings];
+        localStorage.setItem('geetha-mua-bookings', JSON.stringify(merged));
+        return merged;
+      });
+
       setCloudSynced(true);
       setCloudError(false);
     } catch (err) {
@@ -149,7 +151,9 @@ export default function App() {
     setShowPasswordModal(false);
     setIsOwnerMode(true);
     setActiveTab('owner');
-    triggerNotification('🔨 Admin Suite opened. Syncing bookings from cloud...');
+    triggerNotification('🔐 Owner login verified. Loading bookings from cloud...');
+    // Immediately fetch all bookings from Firestore on owner login
+    syncFromFirestore();
   };
 
   // Booking handlers

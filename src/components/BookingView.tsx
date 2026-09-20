@@ -3,7 +3,7 @@ import { Service, BookingDetails } from '../types';
 import { Calendar, Clock, User, Phone, Mail, FileText, ArrowRight, ArrowLeft, Check, Camera, Sparkles, Printer, CheckCircle2, Loader2, CloudOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { saveBookingToFirestore } from '../firebase';
-import { sendBookingEmail } from '../emailService';
+
 
 interface BookingViewProps {
   services: Service[];
@@ -128,8 +128,7 @@ export const BookingView: React.FC<BookingViewProps> = ({
       try {
         await saveBookingToFirestore(bookingData);
         setCloudSaved(true);
-        // Send notification email to owner (non-blocking)
-        sendBookingEmail(bookingData).catch(console.error);
+
       } catch (err) {
         console.error('Firestore save failed:', err);
         setSaveError('Could not save to cloud. Your booking is saved locally.');
