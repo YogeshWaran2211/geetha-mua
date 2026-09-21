@@ -113,9 +113,9 @@ export const HomeView: React.FC<HomeViewProps> = ({
           {services.map((service) => (
             <div
               key={service.id}
-              className="group bg-white dark:bg-zinc-900 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 dark:border-zinc-800 transform hover:-translate-y-1.5"
+              className="group bg-white dark:bg-[#231e33] rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 dark:border-[#2e2845] transform hover:-translate-y-1.5"
             >
-              <div className="h-64 w-full relative overflow-hidden bg-gray-200 dark:bg-zinc-800">
+              <div className="h-64 w-full relative overflow-hidden bg-gray-200 dark:bg-[#2a2440]">
                 <img
                   alt={service.name}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
@@ -136,7 +136,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 <p className="text-gray-500 dark:text-zinc-400 text-xs line-clamp-2 leading-relaxed">
                   {service.description}
                 </p>
-                <div className="pt-2 flex justify-between items-center border-t border-gray-100 dark:border-zinc-800 text-xs">
+                <div className="pt-2 flex justify-between items-center border-t border-gray-100 dark:border-[#2e2845] text-xs">
                   <span className="text-brand-gold font-bold">
                     From {currencySymbol}{service.fromPrice.toLocaleString()}
                   </span>
@@ -146,7 +146,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 </div>
                 <button
                   onClick={() => onBookNow(service)}
-                  className="w-full py-2 bg-brand-dark dark:bg-zinc-800 hover:bg-brand-gold dark:hover:bg-brand-gold text-brand-gold dark:text-gray-200 hover:text-brand-dark dark:hover:text-brand-dark text-[10px] uppercase font-bold tracking-widest transition-colors duration-200"
+                  className="w-full py-2 bg-brand-dark dark:bg-[#2a2440] hover:bg-brand-gold dark:hover:bg-brand-gold text-brand-gold dark:text-gray-200 hover:text-brand-dark dark:hover:text-brand-dark text-[10px] uppercase font-bold tracking-widest transition-colors duration-200"
                 >
                   Book Service
                 </button>
@@ -157,7 +157,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
       </section>
 
       {/* 3. Luxury Packages Horizontal Carousel */}
-      <section className="bg-brand-pink/15 dark:bg-zinc-900/40 py-16 px-4 -mx-4 md:-mx-8">
+      <section className="bg-brand-pink/15 dark:bg-[#231e33]/40 py-16 px-4 -mx-4 md:-mx-8">
         <div className="max-w-7xl mx-auto space-y-10">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="text-center md:text-left space-y-2">
@@ -174,10 +174,10 @@ export const HomeView: React.FC<HomeViewProps> = ({
             {packages.map((pkg) => (
               <div
                 key={pkg.id}
-                className={`min-w-[290px] sm:min-w-[380px] max-w-[400px] snap-center bg-white dark:bg-zinc-900 p-6 md:p-8 rounded-xl shadow-sm border transition-all duration-300 flex flex-col justify-between ${
+                className={`min-w-[290px] sm:min-w-[380px] max-w-[400px] snap-center bg-white dark:bg-[#231e33] p-6 md:p-8 rounded-xl shadow-sm border transition-all duration-300 flex flex-col justify-between ${
                   pkg.popular
                     ? 'border-brand-gold ring-2 ring-brand-gold/30 scale-[1.01] relative'
-                    : 'border-gray-100 dark:border-zinc-800'
+                    : 'border-gray-100 dark:border-[#2e2845]'
                 }`}
               >
                 {pkg.popular && (
@@ -234,3 +234,4 @@ export const HomeView: React.FC<HomeViewProps> = ({
     </motion.div>
   );
 };
+

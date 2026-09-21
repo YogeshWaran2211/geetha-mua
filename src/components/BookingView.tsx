@@ -174,9 +174,9 @@ export const BookingView: React.FC<BookingViewProps> = ({
         {/* Beautiful Progress Timeline Indicator */}
         {step < 4 && (
           <div className="flex justify-center items-center gap-3 pt-4 max-w-xs mx-auto">
-            <div className={`h-1 flex-1 rounded-full transition-all duration-300 ${step >= 1 ? 'bg-brand-gold' : 'bg-gray-200 dark:bg-zinc-800'}`} />
-            <div className={`h-1 flex-1 rounded-full transition-all duration-300 ${step >= 2 ? 'bg-brand-gold' : 'bg-gray-200 dark:bg-zinc-800'}`} />
-            <div className={`h-1 flex-1 rounded-full transition-all duration-300 ${step >= 3 ? 'bg-brand-gold' : 'bg-gray-200 dark:bg-zinc-800'}`} />
+            <div className={`h-1 flex-1 rounded-full transition-all duration-300 ${step >= 1 ? 'bg-brand-gold' : 'bg-gray-200 dark:bg-[#2a2440]'}`} />
+            <div className={`h-1 flex-1 rounded-full transition-all duration-300 ${step >= 2 ? 'bg-brand-gold' : 'bg-gray-200 dark:bg-[#2a2440]'}`} />
+            <div className={`h-1 flex-1 rounded-full transition-all duration-300 ${step >= 3 ? 'bg-brand-gold' : 'bg-gray-200 dark:bg-[#2a2440]'}`} />
           </div>
         )}
       </div>
@@ -189,9 +189,9 @@ export const BookingView: React.FC<BookingViewProps> = ({
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="bg-white dark:bg-zinc-900 p-6 md:p-8 rounded-xl border border-gray-100 dark:border-zinc-800 ambient-shadow space-y-6"
+            className="bg-white dark:bg-[#231e33] p-6 md:p-8 rounded-xl border border-gray-100 dark:border-[#2e2845] ambient-shadow space-y-6"
           >
-            <div className="border-b border-gray-100 dark:border-zinc-800 pb-4 mb-4">
+            <div className="border-b border-gray-100 dark:border-[#2e2845] pb-4 mb-4">
               <h2 className="font-serif text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                 <User size={18} className="text-brand-gold" /> Personal Details
               </h2>
@@ -209,7 +209,7 @@ export const BookingView: React.FC<BookingViewProps> = ({
                   placeholder="Geetha"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full bg-transparent border-b border-gray-200 dark:border-zinc-800 py-2 focus:border-brand-gold focus:outline-none text-gray-900 dark:text-white text-sm transition-colors"
+                  className="w-full bg-transparent border-b border-gray-200 dark:border-[#2e2845] py-2 focus:border-brand-gold focus:outline-none text-gray-900 dark:text-white text-sm transition-colors"
                 />
               </div>
 
@@ -223,7 +223,7 @@ export const BookingView: React.FC<BookingViewProps> = ({
                   placeholder="Lakshmi"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="w-full bg-transparent border-b border-gray-200 dark:border-zinc-800 py-2 focus:border-brand-gold focus:outline-none text-gray-900 dark:text-white text-sm transition-colors"
+                  className="w-full bg-transparent border-b border-gray-200 dark:border-[#2e2845] py-2 focus:border-brand-gold focus:outline-none text-gray-900 dark:text-white text-sm transition-colors"
                 />
               </div>
             </div>
@@ -240,7 +240,7 @@ export const BookingView: React.FC<BookingViewProps> = ({
                   placeholder="+91 1234567890"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full bg-transparent border-b border-gray-200 dark:border-zinc-800 py-2 pl-6 focus:border-brand-gold focus:outline-none text-gray-900 dark:text-white text-sm transition-colors"
+                  className="w-full bg-transparent border-b border-gray-200 dark:border-[#2e2845] py-2 pl-6 focus:border-brand-gold focus:outline-none text-gray-900 dark:text-white text-sm transition-colors"
                 />
               </div>
             </div>
@@ -257,7 +257,7 @@ export const BookingView: React.FC<BookingViewProps> = ({
                   placeholder="geethalakshmi@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-transparent border-b border-gray-200 dark:border-zinc-800 py-2 pl-6 focus:border-brand-gold focus:outline-none text-gray-900 dark:text-white text-sm transition-colors"
+                  className="w-full bg-transparent border-b border-gray-200 dark:border-[#2e2845] py-2 pl-6 focus:border-brand-gold focus:outline-none text-gray-900 dark:text-white text-sm transition-colors"
                 />
               </div>
             </div>
@@ -266,7 +266,7 @@ export const BookingView: React.FC<BookingViewProps> = ({
               <button
                 onClick={handleNextStep}
                 disabled={!firstName || !lastName || !phone || !email}
-                className="inline-flex items-center gap-2 bg-brand-dark dark:bg-zinc-800 hover:bg-brand-gold disabled:bg-gray-100 disabled:dark:bg-zinc-800 text-brand-gold dark:text-gray-300 hover:text-brand-dark disabled:text-gray-400 py-3.5 px-8 rounded font-semibold text-xs uppercase tracking-widest transition-all duration-200 cursor-pointer disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 bg-brand-dark dark:bg-[#2a2440] hover:bg-brand-gold disabled:bg-gray-100 disabled:dark:bg-[#2a2440] text-brand-gold dark:text-gray-300 hover:text-brand-dark disabled:text-gray-400 py-3.5 px-8 rounded font-semibold text-xs uppercase tracking-widest transition-all duration-200 cursor-pointer disabled:cursor-not-allowed"
               >
                 <span>Event Details</span> <ArrowRight size={14} />
               </button>
@@ -281,9 +281,9 @@ export const BookingView: React.FC<BookingViewProps> = ({
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="bg-white dark:bg-zinc-900 p-6 md:p-8 rounded-xl border border-gray-100 dark:border-zinc-800 ambient-shadow space-y-6"
+            className="bg-white dark:bg-[#231e33] p-6 md:p-8 rounded-xl border border-gray-100 dark:border-[#2e2845] ambient-shadow space-y-6"
           >
-            <div className="border-b border-gray-100 dark:border-zinc-800 pb-4 mb-4">
+            <div className="border-b border-gray-100 dark:border-[#2e2845] pb-4 mb-4">
               <h2 className="font-serif text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                 <Calendar size={18} className="text-brand-gold" /> Event Details & Inspiration
               </h2>
@@ -298,14 +298,14 @@ export const BookingView: React.FC<BookingViewProps> = ({
                 <select
                   value={selectedServiceId}
                   onChange={(e) => setSelectedServiceId(e.target.value)}
-                  className="w-full border-b border-gray-200 dark:border-zinc-800 bg-transparent py-2 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-brand-gold"
+                  className="w-full border-b border-gray-200 dark:border-[#2e2845] bg-transparent py-2 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-brand-gold"
                 >
                   {services.map((s) => (
-                    <option key={s.id} value={s.id} className="dark:bg-zinc-950">
+                    <option key={s.id} value={s.id} className="dark:bg-[#1a1625]">
                       {s.name} ({currencySymbol}{s.fromPrice.toLocaleString()}+)
                     </option>
                   ))}
-                  <option value="custom" className="dark:bg-zinc-950">Custom Appointment</option>
+                  <option value="custom" className="dark:bg-[#1a1625]">Custom Appointment</option>
                 </select>
               </div>
 
@@ -320,7 +320,7 @@ export const BookingView: React.FC<BookingViewProps> = ({
                     placeholder="e.g. Engagement, Pre-shoot"
                     value={customEventName}
                     onChange={(e) => setCustomEventName(e.target.value)}
-                    className="w-full bg-transparent border-b border-gray-200 dark:border-zinc-800 py-2 focus:border-brand-gold focus:outline-none text-gray-900 dark:text-white text-sm transition-colors"
+                    className="w-full bg-transparent border-b border-gray-200 dark:border-[#2e2845] py-2 focus:border-brand-gold focus:outline-none text-gray-900 dark:text-white text-sm transition-colors"
                   />
                 </div>
               )}
@@ -335,7 +335,7 @@ export const BookingView: React.FC<BookingViewProps> = ({
                   type="date"
                   value={eventDate}
                   onChange={(e) => setEventDate(e.target.value)}
-                  className="w-full bg-transparent border-b border-gray-200 dark:border-zinc-800 py-2 focus:border-brand-gold focus:outline-none text-gray-900 dark:text-white text-sm transition-colors"
+                  className="w-full bg-transparent border-b border-gray-200 dark:border-[#2e2845] py-2 focus:border-brand-gold focus:outline-none text-gray-900 dark:text-white text-sm transition-colors"
                 />
               </div>
 
@@ -347,7 +347,7 @@ export const BookingView: React.FC<BookingViewProps> = ({
                   type="time"
                   value={eventTime}
                   onChange={(e) => setEventTime(e.target.value)}
-                  className="w-full bg-transparent border-b border-gray-200 dark:border-zinc-800 py-2 focus:border-brand-gold focus:outline-none text-gray-900 dark:text-white text-sm transition-colors"
+                  className="w-full bg-transparent border-b border-gray-200 dark:border-[#2e2845] py-2 focus:border-brand-gold focus:outline-none text-gray-900 dark:text-white text-sm transition-colors"
                 />
               </div>
             </div>
@@ -363,7 +363,7 @@ export const BookingView: React.FC<BookingViewProps> = ({
                   placeholder="https://images.unsplash.com/... or choose preset below"
                   value={inspirationUrl}
                   onChange={(e) => setInspirationUrl(e.target.value)}
-                  className="w-full bg-transparent border-b border-gray-200 dark:border-zinc-800 py-2 text-xs focus:border-brand-gold focus:outline-none text-gray-900 dark:text-white transition-colors"
+                  className="w-full bg-transparent border-b border-gray-200 dark:border-[#2e2845] py-2 text-xs focus:border-brand-gold focus:outline-none text-gray-900 dark:text-white transition-colors"
                 />
               </div>
 
@@ -381,7 +381,7 @@ export const BookingView: React.FC<BookingViewProps> = ({
                       className={`relative border text-left p-1 rounded overflow-hidden aspect-[4/3] group transition-all duration-200 ${
                         inspirationUrl === preset.url
                           ? 'border-brand-gold ring-2 ring-brand-gold/30'
-                          : 'border-gray-100 dark:border-zinc-800'
+                          : 'border-gray-100 dark:border-[#2e2845]'
                       }`}
                     >
                       <img
@@ -409,14 +409,14 @@ export const BookingView: React.FC<BookingViewProps> = ({
             <div className="pt-6 flex justify-between">
               <button
                 onClick={handlePrevStep}
-                className="inline-flex items-center gap-2 bg-gray-50 dark:bg-zinc-800 hover:bg-gray-100 border border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-gray-300 py-3.5 px-6 rounded font-semibold text-xs uppercase tracking-widest transition-all duration-200"
+                className="inline-flex items-center gap-2 bg-gray-50 dark:bg-[#2a2440] hover:bg-gray-100 border border-gray-200 dark:border-[#3d3560] text-gray-600 dark:text-gray-300 py-3.5 px-6 rounded font-semibold text-xs uppercase tracking-widest transition-all duration-200"
               >
                 <ArrowLeft size={14} /> <span>Back</span>
               </button>
 
               <button
                 onClick={handleNextStep}
-                className="inline-flex items-center gap-2 bg-brand-dark dark:bg-zinc-800 hover:bg-brand-gold text-brand-gold dark:text-gray-300 hover:text-brand-dark dark:hover:text-brand-dark py-3.5 px-8 rounded font-semibold text-xs uppercase tracking-widest transition-all duration-200"
+                className="inline-flex items-center gap-2 bg-brand-dark dark:bg-[#2a2440] hover:bg-brand-gold text-brand-gold dark:text-gray-300 hover:text-brand-dark dark:hover:text-brand-dark py-3.5 px-8 rounded font-semibold text-xs uppercase tracking-widest transition-all duration-200"
               >
                 <span>Calculate Package</span> <ArrowRight size={14} />
               </button>
@@ -431,9 +431,9 @@ export const BookingView: React.FC<BookingViewProps> = ({
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="bg-white dark:bg-zinc-900 p-6 md:p-8 rounded-xl border border-gray-100 dark:border-zinc-800 ambient-shadow space-y-8"
+            className="bg-white dark:bg-[#231e33] p-6 md:p-8 rounded-xl border border-gray-100 dark:border-[#2e2845] ambient-shadow space-y-8"
           >
-            <div className="border-b border-gray-100 dark:border-zinc-800 pb-4 mb-4">
+            <div className="border-b border-gray-100 dark:border-[#2e2845] pb-4 mb-4">
               <h2 className="font-serif text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                 <FileText size={18} className="text-brand-gold" /> Customized Package Summary
               </h2>
@@ -536,7 +536,7 @@ export const BookingView: React.FC<BookingViewProps> = ({
             </div>
 
             {/* Total Display Block with Recalculating overlay effect */}
-            <div className="p-6 rounded-xl bg-gray-50 dark:bg-zinc-800/40 flex flex-col md:flex-row justify-between items-center gap-4 relative overflow-hidden border border-gray-100 dark:border-zinc-800">
+            <div className="p-6 rounded-xl bg-gray-50 dark:bg-[#2a2440]/40 flex flex-col md:flex-row justify-between items-center gap-4 relative overflow-hidden border border-gray-100 dark:border-[#2e2845]">
               <div className="text-center md:text-left">
                 <span className="text-[10px] uppercase font-bold tracking-wider text-brand-gold block mb-1">
                   Estimated Grand Total
@@ -559,7 +559,7 @@ export const BookingView: React.FC<BookingViewProps> = ({
             <div className="pt-6 flex justify-between">
               <button
                 onClick={handlePrevStep}
-                className="inline-flex items-center gap-2 bg-gray-50 dark:bg-zinc-800 hover:bg-gray-100 border border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-gray-300 py-3.5 px-6 rounded font-semibold text-xs uppercase tracking-widest transition-all duration-200"
+                className="inline-flex items-center gap-2 bg-gray-50 dark:bg-[#2a2440] hover:bg-gray-100 border border-gray-200 dark:border-[#3d3560] text-gray-600 dark:text-gray-300 py-3.5 px-6 rounded font-semibold text-xs uppercase tracking-widest transition-all duration-200"
               >
                 <ArrowLeft size={14} /> <span>Back</span>
               </button>
@@ -585,7 +585,7 @@ export const BookingView: React.FC<BookingViewProps> = ({
             key="step4"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white dark:bg-zinc-900 p-6 md:p-8 rounded-xl border border-gray-100 dark:border-zinc-800 ambient-shadow space-y-8 text-center"
+            className="bg-white dark:bg-[#231e33] p-6 md:p-8 rounded-xl border border-gray-100 dark:border-[#2e2845] ambient-shadow space-y-8 text-center"
           >
             <div className="space-y-3">
               <div className="inline-flex items-center justify-center p-3 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 mb-2">
@@ -610,8 +610,8 @@ export const BookingView: React.FC<BookingViewProps> = ({
             </div>
 
             {/* Print-ready Invoice Card */}
-            <div className="text-left bg-gray-50 dark:bg-zinc-950 p-6 rounded-xl border border-gray-200 dark:border-zinc-800 max-w-xl mx-auto space-y-6 font-mono text-xs text-gray-800 dark:text-zinc-300">
-              <div className="flex justify-between items-start border-b border-dashed border-gray-300 dark:border-zinc-800 pb-4">
+            <div className="text-left bg-gray-50 dark:bg-[#1a1625] p-6 rounded-xl border border-gray-200 dark:border-[#2e2845] max-w-xl mx-auto space-y-6 font-mono text-xs text-gray-800 dark:text-zinc-300">
+              <div className="flex justify-between items-start border-b border-dashed border-gray-300 dark:border-[#2e2845] pb-4">
                 <div>
                   <h3 className="font-serif font-extrabold text-brand-gold text-sm tracking-wider">GEETHA MUA</h3>
                   <p className="text-[10px] text-gray-400 mt-1">High-End Minimalist Artistry</p>
@@ -631,7 +631,7 @@ export const BookingView: React.FC<BookingViewProps> = ({
 
               {/* Inspiration Image block */}
               {inspirationUrl && (
-                <div className="border border-gray-200 dark:border-zinc-800 rounded p-1 flex items-center gap-3">
+                <div className="border border-gray-200 dark:border-[#2e2845] rounded p-1 flex items-center gap-3">
                   <img src={inspirationUrl} alt="Inspiration Look" className="w-10 h-10 object-cover rounded" />
                   <div>
                     <p className="font-bold uppercase text-[9px] text-brand-gold">Inspiration Look Loaded</p>
@@ -641,7 +641,7 @@ export const BookingView: React.FC<BookingViewProps> = ({
               )}
 
               {/* Price list itemisation */}
-              <div className="space-y-2 border-t border-dashed border-gray-300 dark:border-zinc-800 pt-4">
+              <div className="space-y-2 border-t border-dashed border-gray-300 dark:border-[#2e2845] pt-4">
                 <div className="flex justify-between">
                   <span>Makeup Artistry Fee</span>
                   <span>{currencySymbol}{makeupPrice.toLocaleString()}</span>
@@ -661,7 +661,7 @@ export const BookingView: React.FC<BookingViewProps> = ({
               </div>
 
               {/* Calculated Total */}
-              <div className="flex justify-between items-center border-t border-dashed border-gray-300 dark:border-zinc-800 pt-4 font-bold text-sm">
+              <div className="flex justify-between items-center border-t border-dashed border-gray-300 dark:border-[#2e2845] pt-4 font-bold text-sm">
                 <span className="text-brand-gold uppercase tracking-wider">Estimated Total:</span>
                 <span className="text-lg text-gray-900 dark:text-white">{currencySymbol}{grandTotal.toLocaleString()}</span>
               </div>
@@ -671,7 +671,7 @@ export const BookingView: React.FC<BookingViewProps> = ({
             <div className="flex flex-col sm:flex-row justify-center gap-3 pt-4">
               <button
                 onClick={() => window.print()}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-gray-200 dark:border-zinc-800 rounded hover:bg-gray-50 dark:hover:bg-zinc-800 text-gray-700 dark:text-gray-300 text-xs font-bold uppercase tracking-widest transition-colors duration-200"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-gray-200 dark:border-[#2e2845] rounded hover:bg-gray-50 dark:hover:bg-zinc-800 text-gray-700 dark:text-gray-300 text-xs font-bold uppercase tracking-widest transition-colors duration-200"
               >
                 <Printer size={14} /> Print / Save Receipt
               </button>
@@ -689,3 +689,4 @@ export const BookingView: React.FC<BookingViewProps> = ({
     </div>
   );
 };
+

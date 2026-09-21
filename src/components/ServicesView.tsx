@@ -60,7 +60,7 @@ export const ServicesView: React.FC<ServicesViewProps> = ({
             placeholder="Search makeup services (e.g., Bridal, Airbrush, Reception)..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-3.5 rounded-full border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-gold focus:border-transparent transition-all shadow-sm"
+            className="w-full pl-12 pr-4 py-3.5 rounded-full border border-gray-200 dark:border-[#2e2845] bg-white dark:bg-[#231e33] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-gold focus:border-transparent transition-all shadow-sm"
           />
         </div>
 
@@ -73,7 +73,7 @@ export const ServicesView: React.FC<ServicesViewProps> = ({
               className={`px-4 py-2 rounded-full text-xs uppercase tracking-wider font-semibold transition-all duration-200 ${
                 selectedCategory === cat
                   ? 'bg-brand-gold text-white shadow-sm'
-                  : 'bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 text-gray-500 hover:text-brand-gold'
+                  : 'bg-white dark:bg-[#231e33] border border-gray-100 dark:border-[#2e2845] text-gray-500 hover:text-brand-gold'
               }`}
             >
               {cat}
@@ -85,7 +85,7 @@ export const ServicesView: React.FC<ServicesViewProps> = ({
       {/* Services Grid (Bento/Card Style) */}
       <section>
         {filteredServices.length === 0 ? (
-          <div className="text-center py-20 bg-gray-50 dark:bg-zinc-900/50 rounded-xl border border-dashed border-gray-200 dark:border-zinc-800">
+          <div className="text-center py-20 bg-gray-50 dark:bg-[#231e33]/50 rounded-xl border border-dashed border-gray-200 dark:border-[#2e2845]">
             <Sparkles size={40} className="mx-auto text-gray-300 dark:text-zinc-700 mb-4" />
             <p className="text-gray-500 dark:text-zinc-400 text-sm">
               No services found matching your query.
@@ -102,9 +102,9 @@ export const ServicesView: React.FC<ServicesViewProps> = ({
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.3 }}
                   key={service.id}
-                  className="bg-white dark:bg-zinc-900 rounded-lg overflow-hidden border border-gray-100 dark:border-zinc-800 ambient-shadow hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between"
+                  className="bg-white dark:bg-[#231e33] rounded-lg overflow-hidden border border-gray-100 dark:border-[#2e2845] ambient-shadow hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between"
                 >
-                  <div className="aspect-[4/5] w-full relative bg-gray-100 dark:bg-zinc-800 overflow-hidden">
+                  <div className="aspect-[4/5] w-full relative bg-gray-100 dark:bg-[#2a2440] overflow-hidden">
                     <img
                       className="w-full h-full object-cover"
                       src={service.image}
@@ -112,7 +112,7 @@ export const ServicesView: React.FC<ServicesViewProps> = ({
                       referrerPolicy="no-referrer"
                     />
                     <div className="absolute top-4 left-4 flex flex-col gap-2">
-                      <span className="px-3 py-1 rounded-full bg-white/95 dark:bg-zinc-900/95 text-brand-dark dark:text-white text-[10px] uppercase font-bold tracking-wider shadow-sm border border-gray-100 dark:border-zinc-800">
+                      <span className="px-3 py-1 rounded-full bg-white/95 dark:bg-[#231e33]/95 text-brand-dark dark:text-white text-[10px] uppercase font-bold tracking-wider shadow-sm border border-gray-100 dark:border-[#2e2845]">
                         {service.category}
                       </span>
                       {service.createdAt && Date.now() - new Date(service.createdAt).getTime() < 7 * 24 * 60 * 60 * 1000 && (
@@ -133,7 +133,7 @@ export const ServicesView: React.FC<ServicesViewProps> = ({
                       </p>
                     </div>
 
-                    <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-zinc-800">
+                    <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-[#2e2845]">
                       <div className="flex justify-between items-center text-xs">
                         <span className="font-bold text-brand-gold text-sm">
                           From {currencySymbol}{service.fromPrice.toLocaleString()}
@@ -145,7 +145,7 @@ export const ServicesView: React.FC<ServicesViewProps> = ({
 
                       <button
                         onClick={() => onBookNow(service)}
-                        className="w-full bg-brand-dark dark:bg-zinc-800 hover:bg-brand-gold text-brand-gold dark:text-gray-300 hover:text-brand-dark dark:hover:text-brand-dark font-semibold text-xs uppercase tracking-widest py-3 transition-all duration-200"
+                        className="w-full bg-brand-dark dark:bg-[#2a2440] hover:bg-brand-gold text-brand-gold dark:text-gray-300 hover:text-brand-dark dark:hover:text-brand-dark font-semibold text-xs uppercase tracking-widest py-3 transition-all duration-200"
                       >
                         Book Now
                       </button>
@@ -160,3 +160,4 @@ export const ServicesView: React.FC<ServicesViewProps> = ({
     </motion.div>
   );
 };
+

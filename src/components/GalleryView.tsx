@@ -74,7 +74,7 @@ export const GalleryView: React.FC<GalleryViewProps> = ({
             className={`px-5 py-2 rounded-full text-xs uppercase tracking-wider font-semibold transition-all duration-200 ${
               selectedCategory === cat
                 ? 'bg-brand-gold text-white shadow-sm'
-                : 'bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 text-gray-500 hover:text-brand-gold'
+                : 'bg-white dark:bg-[#231e33] border border-gray-100 dark:border-[#2e2845] text-gray-500 hover:text-brand-gold'
             }`}
           >
             {cat}
@@ -90,7 +90,7 @@ export const GalleryView: React.FC<GalleryViewProps> = ({
           </p>
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="inline-flex items-center gap-2 bg-brand-dark dark:bg-zinc-800 hover:bg-brand-gold dark:hover:bg-brand-gold text-brand-gold dark:text-gray-200 hover:text-brand-dark dark:hover:text-brand-dark px-5 py-2.5 rounded text-xs uppercase tracking-widest font-bold transition-all"
+            className="inline-flex items-center gap-2 bg-brand-dark dark:bg-[#2a2440] hover:bg-brand-gold dark:hover:bg-brand-gold text-brand-gold dark:text-gray-200 hover:text-brand-dark dark:hover:text-brand-dark px-5 py-2.5 rounded text-xs uppercase tracking-widest font-bold transition-all"
           >
             <Plus size={16} />
             {showAddForm ? 'Close Editor' : 'Add New Portfolio Photo'}
@@ -98,7 +98,7 @@ export const GalleryView: React.FC<GalleryViewProps> = ({
 
           {/* Inline Addition Form */}
           {showAddForm && (
-            <form onSubmit={handleSubmit} className="text-left bg-white dark:bg-zinc-900 p-5 rounded-lg border border-gray-200 dark:border-zinc-800 space-y-4 mt-3">
+            <form onSubmit={handleSubmit} className="text-left bg-white dark:bg-[#231e33] p-5 rounded-lg border border-gray-200 dark:border-[#2e2845] space-y-4 mt-3">
               <h3 className="font-serif text-sm font-bold text-gray-900 dark:text-white">
                 New Portfolio Entry Details
               </h3>
@@ -113,7 +113,7 @@ export const GalleryView: React.FC<GalleryViewProps> = ({
                     placeholder="https://images.unsplash.com/photo-..."
                     value={newImage}
                     onChange={(e) => setNewImage(e.target.value)}
-                    className="w-full text-xs p-2.5 border border-gray-200 dark:border-zinc-800 rounded bg-transparent dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-gold"
+                    className="w-full text-xs p-2.5 border border-gray-200 dark:border-[#2e2845] rounded bg-transparent dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-gold"
                   />
                 </div>
                 
@@ -127,7 +127,7 @@ export const GalleryView: React.FC<GalleryViewProps> = ({
                       placeholder="e.g. Classic Bridal Glam"
                       value={newTitle}
                       onChange={(e) => setNewTitle(e.target.value)}
-                      className="w-full text-xs p-2.5 border border-gray-200 dark:border-zinc-800 rounded bg-transparent dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-gold"
+                      className="w-full text-xs p-2.5 border border-gray-200 dark:border-[#2e2845] rounded bg-transparent dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-gold"
                     />
                   </div>
                   <div>
@@ -137,7 +137,7 @@ export const GalleryView: React.FC<GalleryViewProps> = ({
                     <select
                       value={newCategory}
                       onChange={(e) => setNewCategory(e.target.value)}
-                      className="w-full text-xs p-2.5 border border-gray-200 dark:border-zinc-800 rounded bg-white dark:bg-zinc-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-gold"
+                      className="w-full text-xs p-2.5 border border-gray-200 dark:border-[#2e2845] rounded bg-white dark:bg-[#231e33] dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-gold"
                     >
                       <option value="Bridal">Bridal</option>
                       <option value="Celebrity">Celebrity</option>
@@ -170,7 +170,7 @@ export const GalleryView: React.FC<GalleryViewProps> = ({
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{ duration: 0.3 }}
               key={item.id}
-              className="break-inside-avoid relative group rounded-xl overflow-hidden bg-gray-50 dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 shadow-sm transition-all duration-300 hover:shadow-md cursor-pointer"
+              className="break-inside-avoid relative group rounded-xl overflow-hidden bg-gray-50 dark:bg-[#231e33] border border-gray-100 dark:border-[#2e2845] shadow-sm transition-all duration-300 hover:shadow-md cursor-pointer"
             >
               <img
                 className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-[1.03]"
@@ -219,3 +219,4 @@ export const GalleryView: React.FC<GalleryViewProps> = ({
     </motion.div>
   );
 };
+

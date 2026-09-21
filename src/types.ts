@@ -47,3 +47,4 @@ export interface BookingDetails {
   date?: string;
   time?: string;
 }
+

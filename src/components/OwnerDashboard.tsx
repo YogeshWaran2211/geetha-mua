@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Service, BookingDetails, Offer } from '../types';
 import {
   Plus, Trash2, Calendar, Edit3, Briefcase, FileText,
   Sparkles, TrendingUp, Users, Download, Key, Save,
-  ChevronDown, ChevronUp, Image, CheckCircle2, X, Cloud, RefreshCw, Tag, Bell
+  ChevronDown, ChevronUp, Image, CheckCircle2, X, Cloud, RefreshCw, Tag, Bell, Upload, Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { uploadImageToStorage } from '../firebase';
 
 interface OwnerDashboardProps {
   services: Service[];
@@ -123,6 +124,16 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
   const [fromPrice, setFromPrice] = useState<number>(10000);
   const [duration, setDuration] = useState<number>(2);
   const [image, setImage] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState('');
+  const [imageUploading, setImageUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // For editing service image
+  const [editImageFile, setEditImageFile] = useState<File | null>(null);
+  const [editImagePreview, setEditImagePreview] = useState('');
+  const [editImageUploading, setEditImageUploading] = useState(false);
+  const editFileInputRef = useRef<HTMLInputElement>(null);
 
   // Full-edit state for existing service
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
@@ -144,31 +155,77 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
 
   const totalBookingsAmt = bookings.reduce((sum, b) => sum + b.amount, 0);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Handle local image file selection
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const handleEditImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setEditImageFile(file);
+    setEditImagePreview(URL.createObjectURL(file));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !description) return;
-    onAddService({
-      name,
-      category: category === 'Other' ? customCategory || 'Artistry' : category,
-      description,
-      fromPrice: fromPrice || 5000,
-      duration: duration || 1.5,
-      image: image || 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?q=80&w=600',
-    });
-    setName(''); setDescription(''); setFromPrice(10000); setDuration(2); setImage('');
-    setShowAddForm(false);
+    setImageUploading(true);
+    try {
+      let finalImageUrl = image || 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?q=80&w=600';
+      // Upload local file to Firebase Storage if selected
+      if (imageFile) {
+        finalImageUrl = await uploadImageToStorage(imageFile, 'services');
+      }
+      onAddService({
+        name,
+        category: category === 'Other' ? customCategory || 'Artistry' : category,
+        description,
+        fromPrice: fromPrice || 5000,
+        duration: duration || 1.5,
+        image: finalImageUrl,
+      });
+      setName(''); setDescription(''); setFromPrice(10000); setDuration(2);
+      setImage(''); setImageFile(null); setImagePreview('');
+      setShowAddForm(false);
+    } catch (err) {
+      console.error('Image upload failed:', err);
+      alert('Image upload failed. Please check Firebase Storage rules.');
+    } finally {
+      setImageUploading(false);
+    }
   };
+
 
   const handleStartEdit = (service: Service) => {
     setEditingServiceId(service.id);
     setEditFields({ ...service });
   };
 
-  const handleSaveEdit = (id: string) => {
-    onUpdateService(id, editFields);
-    setEditingServiceId(null);
-    setEditFields({});
+  const handleSaveEdit = async (id: string) => {
+    setEditImageUploading(true);
+    try {
+      let updatedFields = { ...editFields };
+      if (editImageFile) {
+        const url = await uploadImageToStorage(editImageFile, 'services');
+        updatedFields.image = url;
+      }
+      onUpdateService(id, updatedFields);
+      setEditingServiceId(null);
+      setEditFields({});
+      setEditImageFile(null);
+      setEditImagePreview('');
+    } catch (err) {
+      console.error('Edit image upload failed:', err);
+      alert('Image upload failed. Please check Firebase Storage rules.');
+    } finally {
+      setEditImageUploading(false);
+    }
   };
+
 
   const handleCancelEdit = () => {
     setEditingServiceId(null);
@@ -236,8 +293,8 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
 
       {/* 2. Admin Quick Stats */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl border border-gray-100 dark:border-zinc-800 ambient-shadow flex items-center gap-4">
-          <div className="p-3 bg-brand-pink/25 dark:bg-zinc-800 rounded-lg text-brand-dark dark:text-brand-gold">
+        <div className="bg-white dark:bg-[#231e33] p-6 rounded-xl border border-gray-100 dark:border-[#2e2845] ambient-shadow flex items-center gap-4">
+          <div className="p-3 bg-brand-pink/25 dark:bg-[#2a2440] rounded-lg text-brand-dark dark:text-brand-gold">
             <TrendingUp size={24} />
           </div>
           <div>
@@ -248,8 +305,8 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
           </div>
         </div>
 
-        <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl border border-gray-100 dark:border-zinc-800 ambient-shadow flex items-center gap-4">
-          <div className="p-3 bg-brand-pink/25 dark:bg-zinc-800 rounded-lg text-brand-dark dark:text-brand-gold">
+        <div className="bg-white dark:bg-[#231e33] p-6 rounded-xl border border-gray-100 dark:border-[#2e2845] ambient-shadow flex items-center gap-4">
+          <div className="p-3 bg-brand-pink/25 dark:bg-[#2a2440] rounded-lg text-brand-dark dark:text-brand-gold">
             <Calendar size={24} />
           </div>
           <div>
@@ -260,8 +317,8 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
           </div>
         </div>
 
-        <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl border border-gray-100 dark:border-zinc-800 ambient-shadow flex items-center gap-4">
-          <div className="p-3 bg-brand-pink/25 dark:bg-zinc-800 rounded-lg text-brand-dark dark:text-brand-gold">
+        <div className="bg-white dark:bg-[#231e33] p-6 rounded-xl border border-gray-100 dark:border-[#2e2845] ambient-shadow flex items-center gap-4">
+          <div className="p-3 bg-brand-pink/25 dark:bg-[#2a2440] rounded-lg text-brand-dark dark:text-brand-gold">
             <Briefcase size={24} />
           </div>
           <div>
@@ -273,7 +330,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
         </div>
 
         {/* Currency Picker */}
-        <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl border border-gray-100 dark:border-zinc-800 ambient-shadow flex flex-col justify-between">
+        <div className="bg-white dark:bg-[#231e33] p-6 rounded-xl border border-gray-100 dark:border-[#2e2845] ambient-shadow flex flex-col justify-between">
           <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 block mb-2">
             Base Currency Symbol
           </span>
@@ -286,7 +343,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
       </section>
 
       {/* 3. Section Tab Navigation */}
-      <div className="flex gap-2 border-b border-gray-100 dark:border-zinc-800">
+      <div className="flex gap-2 border-b border-gray-100 dark:border-[#2e2845]">
         {sectionTabs.map((tab) => (
           <button
             key={tab.id}
@@ -311,9 +368,9 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="bg-white dark:bg-zinc-900 p-6 md:p-8 rounded-xl border border-gray-100 dark:border-zinc-800 ambient-shadow space-y-6"
+            className="bg-white dark:bg-[#231e33] p-6 md:p-8 rounded-xl border border-gray-100 dark:border-[#2e2845] ambient-shadow space-y-6"
           >
-            <div className="flex justify-between items-center border-b border-gray-100 dark:border-zinc-800 pb-4">
+            <div className="flex justify-between items-center border-b border-gray-100 dark:border-[#2e2845] pb-4">
               <h2 className="font-serif text-lg md:text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                 <Briefcase size={18} className="text-brand-gold" /> Services Catalog & Pricing
               </h2>
@@ -327,7 +384,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
 
             {/* Add Service Form */}
             {showAddForm && (
-              <form onSubmit={handleSubmit} className="p-5 bg-gray-50 dark:bg-zinc-950 rounded-lg border border-gray-200 dark:border-zinc-800 space-y-4">
+              <form onSubmit={handleSubmit} className="p-5 bg-gray-50 dark:bg-[#1a1625] rounded-lg border border-gray-200 dark:border-[#2e2845] space-y-4">
                 <h3 className="font-serif text-sm font-bold text-gray-900 dark:text-white flex items-center gap-1">
                   <Sparkles size={14} className="text-brand-gold" /> New Service Specification
                 </h3>
@@ -336,13 +393,13 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
                   <div>
                     <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-zinc-400 mb-1">Service Name</label>
                     <input type="text" required placeholder="e.g. Airbrush HD Muhurtham Look" value={name} onChange={(e) => setName(e.target.value)}
-                      className="w-full text-xs p-2.5 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded dark:text-white" />
+                      className="w-full text-xs p-2.5 bg-white dark:bg-[#231e33] border border-gray-200 dark:border-[#2e2845] rounded dark:text-white" />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-zinc-400 mb-1">Category</label>
                       <select value={category} onChange={(e) => setCategory(e.target.value)}
-                        className="w-full text-xs p-2.5 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded dark:text-white">
+                        className="w-full text-xs p-2.5 bg-white dark:bg-[#231e33] border border-gray-200 dark:border-[#2e2845] rounded dark:text-white">
                         <option>Bridal</option>
                         <option>Reception</option>
                         <option>Baby Shower</option>
@@ -354,7 +411,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
                       <div>
                         <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-zinc-400 mb-1">Custom Tag</label>
                         <input type="text" placeholder="e.g. Editorial" value={customCategory} onChange={(e) => setCustomCategory(e.target.value)}
-                          className="w-full text-xs p-2.5 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded dark:text-white" />
+                          className="w-full text-xs p-2.5 bg-white dark:bg-[#231e33] border border-gray-200 dark:border-[#2e2845] rounded dark:text-white" />
                       </div>
                     )}
                   </div>
@@ -364,17 +421,47 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
                   <div>
                     <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-zinc-400 mb-1">Starting Price ({currencySymbol})</label>
                     <input type="number" required value={fromPrice} onChange={(e) => setFromPrice(parseFloat(e.target.value) || 0)}
-                      className="w-full text-xs p-2.5 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded dark:text-white" />
+                      className="w-full text-xs p-2.5 bg-white dark:bg-[#231e33] border border-gray-200 dark:border-[#2e2845] rounded dark:text-white" />
                   </div>
                   <div>
                     <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-zinc-400 mb-1">Duration (hours)</label>
                     <input type="number" step="0.5" required value={duration} onChange={(e) => setDuration(parseFloat(e.target.value) || 0)}
-                      className="w-full text-xs p-2.5 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded dark:text-white" />
+                      className="w-full text-xs p-2.5 bg-white dark:bg-[#231e33] border border-gray-200 dark:border-[#2e2845] rounded dark:text-white" />
                   </div>
-                  <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-zinc-400 mb-1">Image URL</label>
-                    <input type="url" placeholder="https://images.unsplash.com/..." value={image} onChange={(e) => setImage(e.target.value)}
-                      className="w-full text-xs p-2.5 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded dark:text-white" />
+                </div>
+
+                {/* Image Upload — Local File from Phone/Laptop */}
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-zinc-400 mb-2">
+                    Service Image (Upload from Device)
+                  </label>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    onChange={handleImageFileChange}
+                    className="hidden"
+                  />
+                  <div className="flex gap-3 items-start">
+                    {/* Preview */}
+                    {imagePreview ? (
+                      <div className="relative shrink-0">
+                        <img src={imagePreview} alt="preview" className="w-20 h-20 object-cover rounded-lg border border-gray-200 dark:border-[#2e2845]" />
+                        <button type="button" onClick={() => { setImageFile(null); setImagePreview(''); }}
+                          className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[9px]">✕</button>
+                      </div>
+                    ) : (
+                      <div className="w-20 h-20 rounded-lg border-2 border-dashed border-gray-200 dark:border-[#2e2845] flex items-center justify-center shrink-0">
+                        <Image size={20} className="text-gray-300 dark:text-zinc-600" />
+                      </div>
+                    )}
+                    <div className="flex-1 space-y-2">
+                      <button type="button" onClick={() => fileInputRef.current?.click()}
+                        className="w-full flex items-center justify-center gap-2 py-2.5 border-2 border-dashed border-brand-gold/40 hover:border-brand-gold text-brand-gold text-xs font-bold uppercase tracking-wider rounded-lg transition-all">
+                        <Upload size={14} /> Choose Photo (JPG/PNG)
+                      </button>
+                      <p className="text-[10px] text-gray-400 text-center">From your phone camera, gallery, or laptop</p>
+                    </div>
                   </div>
                 </div>
 
@@ -382,41 +469,42 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
                   <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-zinc-400 mb-1">Description</label>
                   <textarea required rows={3} placeholder="Describe the makeup, styling, and inclusions..."
                     value={description} onChange={(e) => setDescription(e.target.value)}
-                    className="w-full text-xs p-2.5 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded dark:text-white" />
+                    className="w-full text-xs p-2.5 bg-white dark:bg-[#231e33] border border-gray-200 dark:border-[#2e2845] rounded dark:text-white" />
                 </div>
 
-                <button type="submit"
-                  className="w-full py-2.5 bg-brand-gold text-brand-dark rounded text-xs uppercase tracking-widest font-bold hover:bg-amber-500 transition-all">
-                  Add Service to Catalog
+                <button type="submit" disabled={imageUploading}
+                  className="w-full py-2.5 bg-brand-gold text-brand-dark rounded text-xs uppercase tracking-widest font-bold hover:bg-amber-500 disabled:bg-amber-200 disabled:cursor-wait transition-all flex items-center justify-center gap-2">
+                  {imageUploading ? <><Loader2 size={14} className="animate-spin" /> Uploading Image...</> : 'Add Service to Catalog'}
                 </button>
+
               </form>
             )}
 
             {/* Existing Services — Full Edit Table */}
             <div className="space-y-4">
               {services.map((s) => (
-                <div key={s.id} className="rounded-xl border border-gray-100 dark:border-zinc-800 overflow-hidden">
+                <div key={s.id} className="rounded-xl border border-gray-100 dark:border-[#2e2845] overflow-hidden">
                   {/* Service Row Summary */}
-                  <div className="flex flex-col md:flex-row md:items-center gap-4 p-4 bg-gray-50/50 dark:bg-zinc-950/40">
+                  <div className="flex flex-col md:flex-row md:items-center gap-4 p-4 bg-gray-50/50 dark:bg-[#1a1625]/40">
                     <img src={editingServiceId === s.id ? (editFields.image || s.image) : s.image}
                       alt={s.name} className="w-14 h-14 object-cover rounded-lg shrink-0" referrerPolicy="no-referrer" />
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-sm text-gray-900 dark:text-white truncate">{s.name}</p>
                       <p className="text-[11px] text-gray-400 line-clamp-1 mt-0.5">{s.description}</p>
                       <div className="flex items-center gap-3 mt-1 text-[11px] text-gray-500">
-                        <span className="px-2 py-0.5 rounded-full bg-brand-pink/60 dark:bg-zinc-800 text-brand-dark dark:text-gray-200 font-bold">{s.category}</span>
+                        <span className="px-2 py-0.5 rounded-full bg-brand-pink/60 dark:bg-[#2a2440] text-brand-dark dark:text-gray-200 font-bold">{s.category}</span>
                         <span>{s.duration}h · {currencySymbol}{s.fromPrice.toLocaleString()}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       {editingServiceId === s.id ? (
                         <>
-                          <button onClick={() => handleSaveEdit(s.id)}
-                            className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded text-[10px] font-bold">
-                            <Save size={12} /> Save
+                          <button onClick={() => handleSaveEdit(s.id)} disabled={editImageUploading}
+                            className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white px-3 py-1.5 rounded text-[10px] font-bold">
+                            {editImageUploading ? <><Loader2 size={12} className="animate-spin" /> Saving...</> : <><Save size={12} /> Save</>}
                           </button>
                           <button onClick={handleCancelEdit}
-                            className="flex items-center gap-1 bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded text-[10px] font-bold">
+                            className="flex items-center gap-1 bg-gray-100 dark:bg-[#2a2440] text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded text-[10px] font-bold">
                             <X size={12} /> Cancel
                           </button>
                         </>
@@ -442,7 +530,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        className="border-t border-gray-100 dark:border-zinc-800 p-5 bg-white dark:bg-zinc-900 space-y-4 overflow-hidden"
+                        className="border-t border-gray-100 dark:border-[#2e2845] p-5 bg-white dark:bg-[#231e33] space-y-4 overflow-hidden"
                       >
                         <p className="text-[10px] uppercase font-bold text-brand-gold tracking-wider flex items-center gap-1">
                           <Edit3 size={11} /> Edit Service Details
@@ -452,12 +540,12 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
                           <div>
                             <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Service Name</label>
                             <input type="text" value={editFields.name || ''} onChange={(e) => setEditFields({ ...editFields, name: e.target.value })}
-                              className="w-full text-xs p-2.5 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded dark:text-white" />
+                              className="w-full text-xs p-2.5 bg-gray-50 dark:bg-[#2a2440] border border-gray-200 dark:border-[#3d3560] rounded dark:text-white" />
                           </div>
                           <div>
                             <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Category</label>
                             <input type="text" value={editFields.category || ''} onChange={(e) => setEditFields({ ...editFields, category: e.target.value })}
-                              className="w-full text-xs p-2.5 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded dark:text-white" />
+                              className="w-full text-xs p-2.5 bg-gray-50 dark:bg-[#2a2440] border border-gray-200 dark:border-[#3d3560] rounded dark:text-white" />
                           </div>
                         </div>
 
@@ -465,31 +553,47 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
                           <div>
                             <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Price ({currencySymbol})</label>
                             <input type="number" value={editFields.fromPrice || 0} onChange={(e) => setEditFields({ ...editFields, fromPrice: parseFloat(e.target.value) || 0 })}
-                              className="w-full text-xs p-2.5 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded dark:text-white" />
+                              className="w-full text-xs p-2.5 bg-gray-50 dark:bg-[#2a2440] border border-gray-200 dark:border-[#3d3560] rounded dark:text-white" />
                           </div>
                           <div>
                             <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Duration (hours)</label>
                             <input type="number" step="0.5" value={editFields.duration || 0} onChange={(e) => setEditFields({ ...editFields, duration: parseFloat(e.target.value) || 0 })}
-                              className="w-full text-xs p-2.5 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded dark:text-white" />
+                              className="w-full text-xs p-2.5 bg-gray-50 dark:bg-[#2a2440] border border-gray-200 dark:border-[#3d3560] rounded dark:text-white" />
                           </div>
                         </div>
 
                         <div>
-                          <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1 flex items-center gap-1">
-                            <Image size={11} /> Image URL
+                          <label className="block text-[10px] uppercase font-bold text-gray-400 mb-2 flex items-center gap-1">
+                            <Image size={11} /> Change Service Image
                           </label>
-                          <input type="url" value={editFields.image || ''} onChange={(e) => setEditFields({ ...editFields, image: e.target.value })}
-                            placeholder="https://images.unsplash.com/..."
-                            className="w-full text-xs p-2.5 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded dark:text-white" />
-                          {editFields.image && (
-                            <img src={editFields.image} alt="Preview" className="mt-2 h-16 object-cover rounded border border-gray-200 dark:border-zinc-700" referrerPolicy="no-referrer" />
+                          <input
+                            ref={editFileInputRef}
+                            type="file"
+                            accept="image/jpeg,image/jpg,image/png,image/webp"
+                            onChange={handleEditImageFileChange}
+                            className="hidden"
+                          />
+                          <div className="flex gap-3 items-center">
+                            <img
+                              src={editImagePreview || editFields.image || ''}
+                              alt="current"
+                              className="w-16 h-16 object-cover rounded-lg border border-gray-200 dark:border-[#3d3560] shrink-0"
+                              referrerPolicy="no-referrer"
+                            />
+                            <button type="button" onClick={() => editFileInputRef.current?.click()}
+                              className="flex-1 flex items-center justify-center gap-2 py-2 border-2 border-dashed border-brand-gold/40 hover:border-brand-gold text-brand-gold text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all">
+                              <Upload size={12} /> {editImagePreview ? 'Change Photo' : 'Upload New Photo'}
+                            </button>
+                          </div>
+                          {editImagePreview && (
+                            <p className="text-[10px] text-emerald-500 mt-1">✓ New photo selected — will upload on Save</p>
                           )}
                         </div>
 
                         <div>
                           <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Description</label>
                           <textarea rows={3} value={editFields.description || ''} onChange={(e) => setEditFields({ ...editFields, description: e.target.value })}
-                            className="w-full text-xs p-2.5 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded dark:text-white" />
+                            className="w-full text-xs p-2.5 bg-gray-50 dark:bg-[#2a2440] border border-gray-200 dark:border-[#3d3560] rounded dark:text-white" />
                         </div>
                       </motion.div>
                     )}
@@ -507,10 +611,10 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="bg-white dark:bg-zinc-900 p-6 md:p-8 rounded-xl border border-gray-100 dark:border-zinc-800 ambient-shadow space-y-6"
+            className="bg-white dark:bg-[#231e33] p-6 md:p-8 rounded-xl border border-gray-100 dark:border-[#2e2845] ambient-shadow space-y-6"
           >
             {/* Bookings Header + CSV Export */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-100 dark:border-zinc-800 pb-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-100 dark:border-[#2e2845] pb-4">
               <div>
                 <h2 className="font-serif text-lg md:text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                   <FileText size={18} className="text-brand-gold" /> Client Bookings ({bookings.length})
@@ -540,7 +644,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
                   csvDownloaded
                     ? 'bg-emerald-600 text-white'
                     : 'bg-brand-gold hover:bg-amber-500 text-brand-dark'
-                } disabled:bg-gray-100 disabled:dark:bg-zinc-800 disabled:text-gray-400 disabled:cursor-not-allowed`}
+                } disabled:bg-gray-100 disabled:dark:bg-[#2a2440] disabled:text-gray-400 disabled:cursor-not-allowed`}
               >
                 {csvDownloaded ? (
                   <><CheckCircle2 size={14} /> Downloaded!</>
@@ -560,7 +664,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
               <div className="space-y-4">
                 {bookings.map((booking, idx) => (
                   <div key={booking.id || idx}
-                    className="p-5 rounded-xl border border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-950/40 space-y-3 text-xs">
+                    className="p-5 rounded-xl border border-gray-100 dark:border-[#2e2845] bg-gray-50/50 dark:bg-[#1a1625]/40 space-y-3 text-xs">
                     {/* Row 1: Name + Event badge + Date */}
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-bold text-gray-900 dark:text-white text-sm">
@@ -586,19 +690,19 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
                     {/* Row 3: Package breakdown */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
                       {booking.selectedServices.map((svc) => (
-                        <div key={svc.id} className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded p-2">
+                        <div key={svc.id} className="bg-white dark:bg-[#231e33] border border-gray-100 dark:border-[#2e2845] rounded p-2">
                           <p className="text-[10px] text-gray-400 uppercase font-bold truncate">{svc.name}</p>
                           <p className="font-bold text-gray-900 dark:text-white text-xs mt-0.5">{currencySymbol}{svc.price.toLocaleString()}</p>
                         </div>
                       ))}
                       {booking.travelCharges > 0 && (
-                        <div className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded p-2">
+                        <div className="bg-white dark:bg-[#231e33] border border-gray-100 dark:border-[#2e2845] rounded p-2">
                           <p className="text-[10px] text-gray-400 uppercase font-bold">Travel</p>
                           <p className="font-bold text-gray-900 dark:text-white text-xs mt-0.5">{currencySymbol}{booking.travelCharges.toLocaleString()}</p>
                         </div>
                       )}
                       {booking.earlyMorningCharges > 0 && (
-                        <div className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded p-2">
+                        <div className="bg-white dark:bg-[#231e33] border border-gray-100 dark:border-[#2e2845] rounded p-2">
                           <p className="text-[10px] text-gray-400 uppercase font-bold">Early AM</p>
                           <p className="font-bold text-gray-900 dark:text-white text-xs mt-0.5">{currencySymbol}{booking.earlyMorningCharges.toLocaleString()}</p>
                         </div>
@@ -606,7 +710,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
                     </div>
 
                     {/* Row 4: Grand Total */}
-                    <div className="flex justify-between items-center pt-2 border-t border-dashed border-gray-200 dark:border-zinc-800">
+                    <div className="flex justify-between items-center pt-2 border-t border-dashed border-gray-200 dark:border-[#2e2845]">
                       {booking.inspirationImage && (
                         <a href={booking.inspirationImage} target="_blank" rel="noreferrer"
                           className="text-[10px] text-blue-500 underline hover:text-blue-600 truncate max-w-[240px]">
@@ -632,10 +736,10 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="bg-white dark:bg-zinc-900 p-6 md:p-8 rounded-xl border border-gray-100 dark:border-zinc-800 ambient-shadow space-y-6"
+            className="bg-white dark:bg-[#231e33] p-6 md:p-8 rounded-xl border border-gray-100 dark:border-[#2e2845] ambient-shadow space-y-6"
           >
             {/* Header */}
-            <div className="flex items-center gap-2 border-b border-gray-100 dark:border-zinc-800 pb-4">
+            <div className="flex items-center gap-2 border-b border-gray-100 dark:border-[#2e2845] pb-4">
               <Bell size={18} className="text-brand-gold" />
               <div>
                 <h2 className="font-serif text-lg font-bold text-gray-900 dark:text-white">
@@ -648,7 +752,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
             </div>
 
             {/* Add Offer Form */}
-            <form onSubmit={handleAddOfferSubmit} className="bg-gray-50 dark:bg-zinc-950/50 p-5 rounded-xl border border-gray-100 dark:border-zinc-800 space-y-4">
+            <form onSubmit={handleAddOfferSubmit} className="bg-gray-50 dark:bg-[#1a1625]/50 p-5 rounded-xl border border-gray-100 dark:border-[#2e2845] space-y-4">
               <h3 className="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400 flex items-center gap-1.5">
                 <Plus size={12} /> Add New Offer
               </h3>
@@ -660,7 +764,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
                   value={offerTitle}
                   onChange={e => setOfferTitle(e.target.value)}
                   placeholder="e.g. 20% Off Reception Makeup!"
-                  className="w-full text-sm p-3 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold transition-all"
+                  className="w-full text-sm p-3 bg-white dark:bg-[#2a2440] border border-gray-200 dark:border-[#3d3560] rounded-lg dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold transition-all"
                 />
               </div>
               <div>
@@ -671,7 +775,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
                   value={offerDesc}
                   onChange={e => setOfferDesc(e.target.value)}
                   placeholder="e.g. Book any reception package and get 20% discount. Offer valid for select dates."
-                  className="w-full text-sm p-3 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold transition-all resize-none"
+                  className="w-full text-sm p-3 bg-white dark:bg-[#2a2440] border border-gray-200 dark:border-[#3d3560] rounded-lg dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold transition-all resize-none"
                 />
               </div>
               <div>
@@ -680,7 +784,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
                   type="date"
                   value={offerValidUntil}
                   onChange={e => setOfferValidUntil(e.target.value)}
-                  className="w-full text-sm p-3 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold transition-all"
+                  className="w-full text-sm p-3 bg-white dark:bg-[#2a2440] border border-gray-200 dark:border-[#3d3560] rounded-lg dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold transition-all"
                 />
               </div>
               <button
@@ -746,9 +850,9 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="max-w-lg mx-auto bg-white dark:bg-zinc-900 p-6 md:p-8 rounded-xl border border-gray-100 dark:border-zinc-800 ambient-shadow space-y-6"
+            className="max-w-lg mx-auto bg-white dark:bg-[#231e33] p-6 md:p-8 rounded-xl border border-gray-100 dark:border-[#2e2845] ambient-shadow space-y-6"
           >
-            <h2 className="font-serif text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 border-b border-gray-100 dark:border-zinc-800 pb-4">
+            <h2 className="font-serif text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 border-b border-gray-100 dark:border-[#2e2845] pb-4">
               <Key size={18} className="text-brand-gold" /> Change Owner Password
             </h2>
 
@@ -761,19 +865,19 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
                 <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Current Password</label>
                 <input type="password" value={currentPwd} onChange={(e) => { setCurrentPwd(e.target.value); setPwdMessage(null); }}
                   placeholder="Enter current password"
-                  className="w-full text-sm p-3 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold transition-all" />
+                  className="w-full text-sm p-3 bg-gray-50 dark:bg-[#2a2440] border border-gray-200 dark:border-[#3d3560] rounded-lg dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold transition-all" />
               </div>
               <div>
                 <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">New Password</label>
                 <input type="password" value={newPwd} onChange={(e) => { setNewPwd(e.target.value); setPwdMessage(null); }}
                   placeholder="Minimum 6 characters"
-                  className="w-full text-sm p-3 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold transition-all" />
+                  className="w-full text-sm p-3 bg-gray-50 dark:bg-[#2a2440] border border-gray-200 dark:border-[#3d3560] rounded-lg dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold transition-all" />
               </div>
               <div>
                 <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Confirm New Password</label>
                 <input type="password" value={confirmPwd} onChange={(e) => { setConfirmPwd(e.target.value); setPwdMessage(null); }}
                   placeholder="Re-enter new password"
-                  className="w-full text-sm p-3 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold transition-all" />
+                  className="w-full text-sm p-3 bg-gray-50 dark:bg-[#2a2440] border border-gray-200 dark:border-[#3d3560] rounded-lg dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold transition-all" />
               </div>
 
               {/* Message feedback */}
@@ -795,19 +899,19 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
               </AnimatePresence>
 
               <button type="submit" disabled={!currentPwd || !newPwd || !confirmPwd}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-brand-gold hover:bg-amber-500 disabled:bg-gray-100 disabled:dark:bg-zinc-800 text-brand-dark disabled:text-gray-400 rounded-lg font-bold text-xs uppercase tracking-widest transition-all disabled:cursor-not-allowed">
+                className="w-full flex items-center justify-center gap-2 py-3 bg-brand-gold hover:bg-amber-500 disabled:bg-gray-100 disabled:dark:bg-[#2a2440] text-brand-dark disabled:text-gray-400 rounded-lg font-bold text-xs uppercase tracking-widest transition-all disabled:cursor-not-allowed">
                 <Save size={14} /> Update Password
               </button>
             </form>
 
             {/* CSV Export shortcut in settings too */}
-            <div className="border-t border-gray-100 dark:border-zinc-800 pt-6">
+            <div className="border-t border-gray-100 dark:border-[#2e2845] pt-6">
               <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Data Export</h3>
               <p className="text-[11px] text-gray-400 mb-3">
                 Download all client bookings as a CSV file. Open it in Google Sheets or Microsoft Excel.
               </p>
               <button onClick={handleCSVDownload} disabled={bookings.length === 0}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-gold hover:bg-amber-500 text-brand-dark rounded text-xs font-bold uppercase tracking-widest transition-all disabled:bg-gray-100 disabled:dark:bg-zinc-800 disabled:text-gray-400 disabled:cursor-not-allowed">
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-gold hover:bg-amber-500 text-brand-dark rounded text-xs font-bold uppercase tracking-widest transition-all disabled:bg-gray-100 disabled:dark:bg-[#2a2440] disabled:text-gray-400 disabled:cursor-not-allowed">
                 <Download size={14} /> Download Bookings CSV ({bookings.length})
               </button>
             </div>
@@ -818,3 +922,4 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
     </motion.div>
   );
 };
+

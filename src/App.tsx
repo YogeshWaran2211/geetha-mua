@@ -19,6 +19,7 @@ import {
   deleteServiceFromFirestore,
   saveOfferToFirestore,
   deleteOfferFromFirestore,
+  seedServicesToFirestore,
 } from './firebase';
 
 const DEFAULT_OWNER_PASSWORD = 'geetha@0411';
@@ -91,20 +92,41 @@ export default function App() {
   // ════════════════════════════════════════════════════════════════════════════
   useEffect(() => {
     async function loadPublicData() {
-      // Load services from Firestore (so all clients see owner's latest)
-      const cloudServices = await fetchServicesFromFirestore();
-      if (cloudServices.length > 0) {
-        setServices(cloudServices);
-        localStorage.setItem('geetha-mua-services', JSON.stringify(cloudServices));
+      try {
+        // Fetch services from Firestore
+        let cloudServices = await fetchServicesFromFirestore();
+
+        // If Firestore is empty, seed with INITIAL_SERVICES so all clients see them
+        if (cloudServices.length === 0) {
+          const localServices = INITIAL_SERVICES.map(s => ({
+            ...s,
+            createdAt: s.createdAt || new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+          }));
+          await seedServicesToFirestore(localServices);
+          cloudServices = await fetchServicesFromFirestore();
+        }
+
+        if (cloudServices.length > 0) {
+          setServices(cloudServices);
+          localStorage.setItem('geetha-mua-services', JSON.stringify(cloudServices));
+        }
+      } catch (err) {
+        console.warn('Firestore service load failed — using local data:', err);
+      } finally {
+        setServicesLoaded(true);
       }
-      setServicesLoaded(true);
 
       // Load offers from Firestore for bell icon
-      const cloudOffers = await fetchOffersFromFirestore();
-      setOffers(cloudOffers);
+      try {
+        const cloudOffers = await fetchOffersFromFirestore();
+        setOffers(cloudOffers);
+      } catch (err) {
+        console.warn('Firestore offer load failed:', err);
+      }
     }
     loadPublicData();
   }, []);
+
 
   // ════════════════════════════════════════════════════════════════════════════
   // Owner login — sync bookings from Firestore
@@ -279,7 +301,7 @@ export default function App() {
 
       {/* Toast notification */}
       {notification && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-brand-dark dark:bg-zinc-900 border border-brand-gold text-brand-gold text-xs font-semibold px-6 py-3 rounded-full shadow-lg flex items-center gap-2 animate-bounce">
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-brand-dark dark:bg-[#231e33] border border-brand-gold text-brand-gold text-xs font-semibold px-6 py-3 rounded-full shadow-lg flex items-center gap-2 animate-bounce">
           <Sparkles size={14} className="animate-pulse" />
           <span>{notification}</span>
         </div>
@@ -292,7 +314,7 @@ export default function App() {
             ? 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
             : cloudError
             ? 'bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900'
-            : 'bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400 border border-gray-200 dark:border-zinc-700'
+            : 'bg-gray-100 dark:bg-[#2a2440] text-gray-500 dark:text-zinc-400 border border-gray-200 dark:border-[#3d3560]'
         }`}>
           {cloudSynced ? <><Cloud size={11} /> Cloud Synced</>
             : cloudError ? <><CloudOff size={11} /> Offline Mode</>
@@ -371,3 +393,4 @@ export default function App() {
     </div>
   );
 }
+

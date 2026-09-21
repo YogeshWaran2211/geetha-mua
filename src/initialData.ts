@@ -77,3 +77,4 @@ export const INITIAL_GALLERY: GalleryItem[] = [
     title: 'Metallic Eye Precision'
   }
 ];
+

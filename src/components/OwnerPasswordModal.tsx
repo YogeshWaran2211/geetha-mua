@@ -85,7 +85,7 @@ export const OwnerPasswordModal: React.FC<OwnerPasswordModalProps> = ({
               }
               exit={{ opacity: 0, scale: 0.92, y: 20 }}
               transition={{ duration: shake ? 0.4 : 0.25, ease: 'easeOut' }}
-              className="bg-white dark:bg-zinc-900 rounded-2xl border border-gray-100 dark:border-zinc-800 shadow-2xl w-full max-w-sm p-8 relative"
+              className="bg-white dark:bg-[#231e33] rounded-2xl border border-gray-100 dark:border-[#2e2845] shadow-2xl w-full max-w-sm p-8 relative"
               onKeyDown={handleKeyDown}
             >
               {/* Close Button */}
@@ -129,10 +129,10 @@ export const OwnerPasswordModal: React.FC<OwnerPasswordModalProps> = ({
                         if (error) setError('');
                       }}
                       placeholder="Enter password..."
-                      className={`w-full pl-9 pr-10 py-3 text-sm rounded-lg border transition-all duration-200 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 ${
+                      className={`w-full pl-9 pr-10 py-3 text-sm rounded-lg border transition-all duration-200 bg-gray-50 dark:bg-[#2a2440] text-gray-900 dark:text-white focus:outline-none focus:ring-2 ${
                         error
                           ? 'border-red-400 dark:border-red-700 focus:ring-red-300/30'
-                          : 'border-gray-200 dark:border-zinc-700 focus:ring-brand-gold/30 focus:border-brand-gold'
+                          : 'border-gray-200 dark:border-[#3d3560] focus:ring-brand-gold/30 focus:border-brand-gold'
                       }`}
                     />
                     <button
@@ -164,7 +164,7 @@ export const OwnerPasswordModal: React.FC<OwnerPasswordModalProps> = ({
                 <button
                   type="submit"
                   disabled={!input.trim()}
-                  className="w-full flex items-center justify-center gap-2 py-3.5 bg-brand-gold hover:bg-amber-500 disabled:bg-gray-100 disabled:dark:bg-zinc-800 text-brand-dark disabled:text-gray-400 rounded-lg font-bold text-xs uppercase tracking-widest transition-all duration-200 shadow-md shadow-brand-gold/10 disabled:shadow-none disabled:cursor-not-allowed"
+                  className="w-full flex items-center justify-center gap-2 py-3.5 bg-brand-gold hover:bg-amber-500 disabled:bg-gray-100 disabled:dark:bg-[#2a2440] text-brand-dark disabled:text-gray-400 rounded-lg font-bold text-xs uppercase tracking-widest transition-all duration-200 shadow-md shadow-brand-gold/10 disabled:shadow-none disabled:cursor-not-allowed"
                 >
                   <Sparkles size={14} />
                   Enter Owner Suite
@@ -181,3 +181,4 @@ export const OwnerPasswordModal: React.FC<OwnerPasswordModalProps> = ({
     </AnimatePresence>
   );
 };
+

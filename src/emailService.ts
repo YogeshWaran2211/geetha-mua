@@ -56,3 +56,4 @@ export async function sendBookingEmail(booking: BookingDetails): Promise<void> {
     // Don't throw — email failure shouldn't block the booking
   }
 }
+
